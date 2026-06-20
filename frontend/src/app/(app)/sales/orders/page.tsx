@@ -80,7 +80,7 @@ function SalesOrdersList() {
         />
       </div>
       <div className="mt-4">
-        <OrderTable orders={filteredData.slice(0, 120)} />
+        <OrderTable orders={filteredData.slice(0, 120)} type="sales" />
       </div>
     </>
   );

@@ -1,56 +1,84 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useErpStore } from "@/stores/erp-store";
+import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select } from "@/components/ui/field";
+import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { ArrowLeft } from "@/components/icons";
-import type { UserRole } from "@/stores/auth-store";
+
+interface Group {
+  id: number;
+  name: string;
+}
 
 const schema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-z0-9._-]+$/, "Only letters, numbers, dots, dashes, and underscores are allowed"),
   email: z.string().email("Please enter a valid email address"),
-  role: z.enum(["Administrator", "Inventory Manager", "Procurement Manager", "Manufacturing Manager", "Sales Manager"], {
-    required_error: "Role assignment is required"
-  }),
-  status: z.enum(["Active", "Review"])
+  password: z.string().min(8, "Password must be at least 8 characters").regex(/[a-z]/, "Must contain a lowercase letter").regex(/[A-Z]/, "Must contain an uppercase letter").regex(/[\W_]/, "Must contain a special character"),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  roleId: z.string().min(1, "Role assignment is required"),
+  role_title: z.string().optional(),
+  status: z.enum(["active", "inactive"])
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function NewUserPage() {
   const router = useRouter();
-  const addUser = useErpStore((state) => state.addUser);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  // Query database roles
+  const { data: roles = [], isLoading } = useQuery<Group[]>({
+    queryKey: ["roles"],
+    queryFn: () => apiClient<Group[]>("roles/"),
+  });
+
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       username: "",
       email: "",
-      role: "Manufacturing Manager",
-      status: "Active"
+      password: "",
+      first_name: "",
+      last_name: "",
+      roleId: "",
+      role_title: "",
+      status: "active"
     }
   });
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     try {
-      addUser({
+      const payload = {
         username: data.username,
         email: data.email,
-        role: data.role as UserRole,
-        status: data.status
+        password: data.password,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        groups: [Number(data.roleId)],
+        profile: {
+          role_title: data.role_title || "",
+          status: data.status,
+        }
+      };
+
+      await apiClient("users/", {
+        method: "POST",
+        body: JSON.stringify(payload),
       });
+
       toast.success(`User ${data.username} invited successfully.`);
       router.push("/users");
-    } catch (error) {
-      toast.error("Failed to invite new user.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to invite new user.");
     }
   };
 
@@ -72,7 +100,7 @@ export default function NewUserPage() {
         <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Username</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Username *</span>
               <Input
                 placeholder="e.g. jason.bourne"
                 {...register("username")}
@@ -84,7 +112,7 @@ export default function NewUserPage() {
             </div>
 
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Work Email</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Work Email *</span>
               <Input
                 type="email"
                 placeholder="e.g. jason@orbis.example"
@@ -99,24 +127,64 @@ export default function NewUserPage() {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Workspace Role Assignment</span>
-              <Select {...register("role")} className={errors.role ? "border-[var(--danger)]" : ""}>
-                <option value="Administrator">Administrator</option>
-                <option value="Inventory Manager">Inventory Manager</option>
-                <option value="Procurement Manager">Procurement Manager</option>
-                <option value="Manufacturing Manager">Manufacturing Manager</option>
-                <option value="Sales Manager">Sales Manager</option>
-              </Select>
-              {errors.role && (
-                <span className="text-xs text-[var(--danger)]">{errors.role.message}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">First Name</span>
+              <Input
+                placeholder="e.g. Jason"
+                {...register("first_name")}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]">Last Name</span>
+              <Input
+                placeholder="e.g. Bourne"
+                {...register("last_name")}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]">Secure Password *</span>
+              <Input
+                type="password"
+                placeholder="Must be secure & robust"
+                {...register("password")}
+                className={errors.password ? "border-[var(--danger)]" : ""}
+              />
+              {errors.password && (
+                <span className="text-xs text-[var(--danger)]">{errors.password.message}</span>
               )}
             </div>
 
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Clearance Status</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Job Title</span>
+              <Input
+                placeholder="e.g. Manufacturing Coordinator"
+                {...register("role_title")}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]">Workspace Role Assignment *</span>
+              <Select {...register("roleId")} className={errors.roleId ? "border-[var(--danger)]" : ""}>
+                <option value="">{isLoading ? "Loading roles..." : "Select Group Role"}</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </Select>
+              {errors.roleId && (
+                <span className="text-xs text-[var(--danger)]">{errors.roleId.message}</span>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]">Clearance Status *</span>
               <Select {...register("status")} className={errors.status ? "border-[var(--danger)]" : ""}>
-                <option value="Active">Active (Permit Clearance)</option>
-                <option value="Review">Review (Hold / Pending Audit)</option>
+                <option value="active">Active (Permit Clearance)</option>
+                <option value="inactive">On Hold (Pending Audit)</option>
               </Select>
               {errors.status && (
                 <span className="text-xs text-[var(--danger)]">{errors.status.message}</span>

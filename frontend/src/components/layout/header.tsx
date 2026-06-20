@@ -19,6 +19,7 @@ const workspaces = [
   { id: "tertiary", name: "ORBIS HQ Executive", facility: "Corporate HQ" },
 ];
 
+
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
@@ -26,6 +27,7 @@ export function Header() {
   const { user, logout } = useAuthStore();
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
   const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
+
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState(workspaces[0]);
   const switcherRef = useRef<HTMLDivElement>(null);
@@ -48,12 +50,12 @@ export function Header() {
   // Compute breadcrumbs
   const segments = pathname.split("/").filter(Boolean);
   const breadcrumbs = [{ label: "ORBIS", href: "/" }];
-  
+
   let tempPath = "";
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
     tempPath += `/${segment}`;
-    
+
     // Check if path exists in route map
     const route = appRoutes.find((r) => r.href === tempPath);
     if (route) {
@@ -70,10 +72,10 @@ export function Header() {
   return (
     <header className="glass sticky top-0 z-30 border-b border-[var(--border)]">
       <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="lg:hidden" 
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
           aria-label="Open menu"
           onClick={() => setSidebarOpen(true)}
         >
@@ -95,7 +97,7 @@ export function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          
+
           {workspaceOpen && (
             <div className="absolute left-0 mt-1.5 w-56 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow)]">
               <div className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
@@ -109,9 +111,8 @@ export function Header() {
                     setWorkspaceOpen(false);
                     toast.success(`Connected to workspace: ${ws.name}`);
                   }}
-                  className={`w-full flex flex-col items-start rounded-[8px] px-2.5 py-1.5 text-left text-xs transition hover:bg-[var(--surface-muted)] ${
-                    ws.id === selectedWorkspace.id ? "bg-[var(--primary-soft)] text-[var(--primary)] font-semibold" : "text-[var(--foreground)]"
-                  }`}
+                  className={`w-full flex flex-col items-start rounded-[8px] px-2.5 py-1.5 text-left text-xs transition hover:bg-[var(--surface-muted)] ${ws.id === selectedWorkspace.id ? "bg-[var(--primary-soft)] text-[var(--primary)] font-semibold" : "text-[var(--foreground)]"
+                    }`}
                 >
                   <span>{ws.name}</span>
                   <span className="text-[10px] text-[var(--muted)]">{ws.facility}</span>
@@ -135,8 +136,8 @@ export function Header() {
                     {crumb.label}
                   </span>
                 ) : (
-                  <Link 
-                    href={crumb.href} 
+                  <Link
+                    href={crumb.href}
                     className="hover:text-[var(--primary)] transition truncate max-w-[85px] sm:max-w-none"
                   >
                     {crumb.label}
@@ -167,7 +168,7 @@ export function Header() {
         >
           <Bell className="h-4 w-4" />
         </Button>
-        
+
         <Button
           variant="secondary"
           size="icon"

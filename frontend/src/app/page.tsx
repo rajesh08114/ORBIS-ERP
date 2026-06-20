@@ -24,6 +24,7 @@ import {
   Plus
 } from "@/components/icons";
 import { OrbisLogo } from "@/components/layout/orbis-logo";
+import { useAuthStore } from "@/stores/auth-store";
 
 const slides = [
   {
@@ -135,6 +136,16 @@ export default function HomePage() {
   const [activeWorkflow, setActiveWorkflow] = useState(0);
   const { resolvedTheme, setTheme } = useTheme();
 
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const showLoggedIn = isClient && hydrated && !!user;
+
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActive((current) => (current + 1) % slides.length);
@@ -146,14 +157,14 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden font-sans">
-      
+
       {/* 1. Header (Sticky & Glassmorphism) */}
       <header className="glass fixed inset-x-0 top-0 z-50 border-b border-[var(--border)]">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 lg:px-8">
           <div className="flex items-center gap-2">
             <OrbisLogo />
           </div>
-          
+
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[var(--muted)]">
             <a href="#platform" className="hover:text-[var(--foreground)] transition">Modules</a>
             <a href="#twin" className="hover:text-[var(--foreground)] transition">Digital Twin</a>
@@ -170,12 +181,20 @@ export default function HomePage() {
             >
               {resolvedTheme === "dark" ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Link className="hidden sm:block text-sm font-semibold hover:text-[var(--primary)] transition" href="/login">
-              Sign In
-            </Link>
-            <Link className="rounded-[8px] bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white dark:text-[#0d0d0f] hover:bg-[var(--primary-strong)] transition" href="/login">
-              Explore Demo Workspace
-            </Link>
+            {showLoggedIn ? (
+              <Link className="rounded-[8px] bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white dark:text-[#0d0d0f] hover:bg-[var(--primary-strong)] transition" href={user?.home || "/dashboard"}>
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link className="hidden sm:block text-sm font-semibold hover:text-[var(--primary)] transition" href="/login">
+                  Sign In
+                </Link>
+                <Link className="rounded-[8px] bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white dark:text-[#0d0d0f] hover:bg-[var(--primary-strong)] transition" href="/login">
+                  Explore Demo Workspace
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -192,21 +211,21 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--primary)] shadow-sm">
               <Activity className="h-3.5 w-3.5 animate-pulse" /> Connected ERP for Modern Manufacturing
             </div>
-            
+
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]">
               Intelligent ERP for <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]">
                 Modern Manufacturers
               </span>
             </h1>
-            
+
             <p className="text-sm leading-relaxed text-[var(--muted)] max-w-md">
               From Customer Demand to Finished Delivery. <br />
               Automate. Track. Predict. Deliver.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-1">
-              <Link className="inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white dark:text-[#0d0d0f] shadow-lg shadow-[var(--primary)]/10 hover:bg-[var(--primary-strong)] transition cursor-pointer" href="/login">
+              <Link className="inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white dark:text-[#0d0d0f] shadow-lg shadow-[var(--primary)]/10 hover:bg-[var(--primary-strong)] transition cursor-pointer" href={showLoggedIn ? (user?.home || "/dashboard") : "/login"}>
                 Explore Dashboard <ArrowRight className="h-3.5 w-3.5" />
               </Link>
               <a className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-bold text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition shadow-sm cursor-pointer" href="#twin">
@@ -249,11 +268,10 @@ export default function HomePage() {
                   <button
                     key={item.title}
                     onClick={() => setActive(index)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition duration-200 cursor-pointer ${
-                      activeSlide
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition duration-200 cursor-pointer ${activeSlide
                         ? "bg-[var(--primary)] text-white dark:text-[#0d0d0f] border-[var(--primary)] shadow-sm"
                         : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)] hover:bg-[var(--surface-muted)]"
-                    }`}
+                      }`}
                   >
                     {item.title}
                   </button>
@@ -265,10 +283,10 @@ export default function HomePage() {
             <div className="relative w-full aspect-[16/10] select-none mt-4 lg:mt-0">
               {/* Back card (deco) */}
               <div className="absolute inset-0 rounded-[16px] border border-white/5 bg-[#161618]/40 shadow-xl transform translate-x-4 -translate-y-4 scale-[0.98] rotate-[1.5deg] blur-[0.5px] pointer-events-none transition duration-700 ease-out hidden sm:block" />
-              
+
               {/* Middle card (deco) */}
               <div className="absolute inset-0 rounded-[16px] border border-white/10 bg-[#161618]/60 shadow-2xl transform -translate-x-2 translate-y-2 -rotate-[1deg] blur-[0.2px] pointer-events-none transition duration-700 ease-out hidden sm:block" />
-              
+
               {/* Main front active card */}
               <div className="absolute inset-0 rounded-[16px] border border-[var(--border)] bg-[#151118]/95 overflow-hidden shadow-2xl z-10 flex flex-col">
                 {/* Browser control header */}
@@ -283,14 +301,14 @@ export default function HomePage() {
                   </div>
                   {/* Arrow navigation shortcut buttons */}
                   <div className="flex items-center gap-1">
-                    <button 
+                    <button
                       onClick={() => setActive((active - 1 + slides.length) % slides.length)}
                       className="h-6 w-6 rounded bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 cursor-pointer"
                       aria-label="Previous slide"
                     >
                       <ChevronLeft className="h-3.5 w-3.5" />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setActive((active + 1) % slides.length)}
                       className="h-6 w-6 rounded bg-white/5 flex items-center justify-center text-slate-300 hover:bg-white/10 cursor-pointer"
                       aria-label="Next slide"
@@ -319,7 +337,7 @@ export default function HomePage() {
                         sizes="(max-width: 1024px) 100vw, 55vw"
                         priority
                       />
-                      
+
                       {/* Floating Info Overlay (Glassmorphism) */}
                       <div className="absolute bottom-4 left-4 right-4 glass p-4 rounded-[12px] border border-white/10 text-white flex items-center justify-between bg-black/60 shadow-lg">
                         <div className="min-w-0 font-sans">
@@ -370,7 +388,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="pt-2">
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--primary)] px-5 py-3 font-bold text-white hover:bg-[var(--primary-strong)] transition">
+              <Link href={showLoggedIn ? (user?.home || "/dashboard") : "/login"} className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--primary)] px-5 py-3 font-bold text-white hover:bg-[var(--primary-strong)] transition">
                 Open Digital Twin <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -385,10 +403,10 @@ export default function HomePage() {
               </div>
               <span className="text-[10px] font-mono text-[var(--muted)]">Status: Healthy (98.2%)</span>
             </div>
-            
+
             {/* Simulation of a real digital twin graph */}
             <div className="relative min-h-[300px] border border-[var(--border)] bg-[var(--surface-muted)] rounded-[12px] p-6 flex flex-col justify-between">
-              
+
               {/* Nodes stack */}
               <div className="grid grid-cols-3 gap-6 relative z-10">
                 <div className="p-3 rounded-[10px] border border-emerald-500/20 bg-emerald-500/5 text-center">
@@ -440,7 +458,7 @@ export default function HomePage() {
           <div className="lg:col-span-6 relative aspect-[16/10] w-full rounded-[16px] border border-[var(--border)] bg-[var(--surface-muted)] overflow-hidden shadow-md lg:order-2">
             <Image src="/product/manufacturing.png" alt="Manufacturing Command Center" fill className="object-cover object-top" />
           </div>
-          
+
           <div className="lg:col-span-6 space-y-6 lg:order-1">
             <span className="text-sm font-bold uppercase tracking-wider text-[var(--primary)]">Operations Excellence</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
@@ -462,7 +480,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="pt-2">
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
+              <Link href={showLoggedIn ? "/manufacturing/command-center" : "/login"} className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
                 Explore Manufacturing Module <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -500,7 +518,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="pt-2">
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
+              <Link href={showLoggedIn ? "/inventory" : "/login"} className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
                 View Inventory Controls <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -536,7 +554,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="pt-2">
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
+              <Link href={showLoggedIn ? "/dashboard" : "/login"} className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--primary)] hover:underline">
                 Open Executive Analytics <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -563,11 +581,10 @@ export default function HomePage() {
                 <button
                   key={wf.step}
                   onClick={() => setActiveWorkflow(index)}
-                  className={`text-left p-4.5 rounded-[12px] border transition relative flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[160px] ${
-                    isActive
+                  className={`text-left p-4.5 rounded-[12px] border transition relative flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[160px] ${isActive
                       ? "border-[var(--primary)] bg-[var(--surface)] shadow-md ring-2 ring-[var(--primary)]/10"
                       : "border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[var(--surface)]"
-                  }`}
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between text-xs font-bold text-[var(--muted)]">
@@ -602,7 +619,7 @@ export default function HomePage() {
                 </p>
               </div>
               <div>
-                <Link href="/login" className="inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--surface-muted)] hover:bg-[var(--surface-raised)] border border-[var(--border)] px-4 py-2.5 text-xs font-bold transition">
+                <Link href={showLoggedIn ? (user?.home || "/dashboard") : "/login"} className="inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--surface-muted)] hover:bg-[var(--surface-raised)] border border-[var(--border)] px-4 py-2.5 text-xs font-bold transition">
                   Simulate In Sandbox <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -647,7 +664,7 @@ export default function HomePage() {
             <span className="text-sm font-bold uppercase tracking-wider text-[var(--primary)]">Success Stories</span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight">Vouched for by Industrial Operators</h2>
           </div>
-          
+
           <div className="mt-14 grid md:grid-cols-3 gap-6">
             {[
               {
@@ -700,8 +717,8 @@ export default function HomePage() {
               Access the role-based ORBIS demo sandbox. Verify BOM rollups, cycle counts, work orders, and executive views immediately.
             </p>
           </div>
-          <Link className="inline-flex shrink-0 items-center gap-2 rounded-[8px] bg-white px-6 py-3.5 font-bold text-[var(--primary)] shadow-xl hover:bg-slate-50 transition" href="/login">
-            Open Sandbox Workspace <ArrowRight className="h-4.5 w-4.5" />
+          <Link className="inline-flex shrink-0 items-center gap-2 rounded-[8px] bg-white px-6 py-3.5 font-bold text-[var(--primary)] shadow-xl hover:bg-slate-50 transition" href={showLoggedIn ? (user?.home || "/dashboard") : "/login"}>
+            {showLoggedIn ? "Go to Dashboard" : "Open Sandbox Workspace"} <ArrowRight className="h-4.5 w-4.5" />
           </Link>
         </div>
       </section>
@@ -718,7 +735,11 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-400">
             <a href="#platform" className="hover:text-white transition">Modules</a>
             <a href="#twin" className="hover:text-white transition">Digital Twin</a>
-            <Link href="/login" className="hover:text-white transition">Sign In</Link>
+            {showLoggedIn ? (
+              <Link href={user?.home || "/dashboard"} className="hover:text-white transition">Dashboard</Link>
+            ) : (
+              <Link href="/login" className="hover:text-white transition">Sign In</Link>
+            )}
             <span className="text-slate-600">|</span>
             <span className="flex items-center gap-1.5 text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> System Operational

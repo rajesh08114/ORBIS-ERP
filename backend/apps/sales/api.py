@@ -13,18 +13,23 @@ from apps.sales.services import cancel_sales_order, confirm_sales_order, deliver
 
 
 class SalesOrderLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_sku = serializers.CharField(source="product.sku", read_only=True)
+
     class Meta:
         model = SalesOrderLine
         fields = [
             "id",
             "order",
             "product",
+            "product_name",
+            "product_sku",
             "quantity_ordered",
             "quantity_reserved",
             "quantity_delivered",
             "unit_price",
         ]
-        read_only_fields = ["id", "quantity_reserved", "quantity_delivered"]
+        read_only_fields = ["id", "quantity_reserved", "quantity_delivered", "product_name", "product_sku"]
 
 
 class SalesOrderSerializer(serializers.ModelSerializer):

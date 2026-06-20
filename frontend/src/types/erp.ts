@@ -32,6 +32,7 @@ export type Vendor = {
 
 export type Order = {
   id: string;
+  dbId?: number;
   party: string;
   value: number;
   due: string;

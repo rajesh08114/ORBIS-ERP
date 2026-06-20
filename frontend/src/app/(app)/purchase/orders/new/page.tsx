@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/field";
+import { PartnerCombobox } from "@/components/ui/partner-combobox";
 import { toast } from "sonner";
 import { useVendors, useProducts } from "@/hooks/use-erp";
 import { apiClient } from "@/lib/api-client";
@@ -92,14 +93,19 @@ export default function NewPurchaseOrderPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-[var(--foreground)]">Vendor</span>
-              <Select {...register("vendor")} className={errors.vendor ? "border-[var(--danger)]" : ""}>
-                <option value="">Select Vendor...</option>
-                {vendors?.map((v: any) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name || v.vendor_name || `Vendor #${v.id}`}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                name="vendor"
+                control={control}
+                render={({ field }) => (
+                  <PartnerCombobox
+                    value={field.value}
+                    onChange={(id) => field.onChange(id)}
+                    options={(vendors || []).map((v: any) => ({ id: v.id, name: v.name || `Vendor #${v.id}`, code: v.vendor_code }))}
+                    placeholder="Type vendor name..."
+                    className={errors.vendor ? "border-[var(--danger)] rounded-[8px]" : ""}
+                  />
+                )}
+              />
               {errors.vendor && (
                 <span className="text-xs text-[var(--danger)]">{errors.vendor.message}</span>
               )}

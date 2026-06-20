@@ -3,7 +3,7 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.inventory.models import StockMovement
-from apps.manufacturing.models import ManufacturingOrder
+from apps.manufacturing.models import ManufacturingOrder, BillOfMaterial
 from apps.products.models import Product
 from apps.purchases.models import PurchaseOrder
 from apps.sales.models import SalesOrder
@@ -108,6 +108,10 @@ def get_dashboard_metrics(user=None):
         },
         "inventory_value": str(inventory_value or 0),
         "top_selling_products": top_selling_products,
+        "boms": {
+            "total": BillOfMaterial.objects.count(),
+            "active": BillOfMaterial.objects.filter(is_active=True).count(),
+        },
         "stock_movements": {
             "total": StockMovement.objects.count(),
             "recent": [

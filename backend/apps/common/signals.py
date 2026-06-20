@@ -6,9 +6,19 @@ from apps.common.profile_services import ensure_profile_bundle
 
 
 ROLE_PERMISSIONS = {
-    "Admin": ["*"],
+    "Administrator": ["*"],
     "Sales User": [
         "partners.view_customer",
+        "products.view_product",
+        "sales.view_salesorder",
+        "sales.add_salesorder",
+        "sales.change_salesorder",
+    ],
+    "Sales Manager": [
+        "partners.view_customer",
+        "partners.add_customer",
+        "partners.change_customer",
+        "partners.delete_customer",
         "products.view_product",
         "sales.view_salesorder",
         "sales.add_salesorder",
@@ -21,7 +31,30 @@ ROLE_PERMISSIONS = {
         "purchases.add_purchaseorder",
         "purchases.change_purchaseorder",
     ],
+    "Procurement Manager": [
+        "partners.view_vendor",
+        "partners.add_vendor",
+        "partners.change_vendor",
+        "partners.delete_vendor",
+        "products.view_product",
+        "purchases.view_purchaseorder",
+        "purchases.add_purchaseorder",
+        "purchases.change_purchaseorder",
+    ],
     "Manufacturing User": [
+        "products.view_product",
+        "manufacturing.view_billofmaterial",
+        "manufacturing.add_billofmaterial",
+        "manufacturing.change_billofmaterial",
+        "manufacturing.view_manufacturingorder",
+        "manufacturing.add_manufacturingorder",
+        "manufacturing.change_manufacturingorder",
+        "manufacturing.view_workcenter",
+        "manufacturing.view_operation",
+        "manufacturing.view_workorder",
+        "manufacturing.change_workorder",
+    ],
+    "Manufacturing Manager": [
         "products.view_product",
         "manufacturing.view_billofmaterial",
         "manufacturing.add_billofmaterial",
@@ -75,6 +108,15 @@ def ensure_erp_groups(sender, **kwargs):
         "common",
     }:
         return
+
+    # Rename/migrate Admin group to Administrator for frontend/backend consistency
+    admin_group = Group.objects.filter(name="Admin").first()
+    administrator_group, _ = Group.objects.get_or_create(name="Administrator")
+    if admin_group:
+        for user in admin_group.user_set.all():
+            user.groups.add(administrator_group)
+            user.groups.remove(admin_group)
+        admin_group.delete()
 
     for role_name, permissions in ROLE_PERMISSIONS.items():
         group, _ = Group.objects.get_or_create(name=role_name)

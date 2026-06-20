@@ -75,6 +75,7 @@ type AuthState = {
   register: (payload: any) => Promise<SessionUser | null>;
   logout: () => void;
   setHydrated: (hydrated: boolean) => void;
+  refreshUser: () => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -176,6 +177,40 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem("refresh_token");
         }
         set({ user: null });
+      },
+      refreshUser: async () => {
+        // Re-fetch the current user's groups/role from the backend.
+        // Called on app mount so any role changes in Django admin are reflected
+        // without requiring the user to log out and log in again.
+        try {
+          const response = await apiClient<{ success: boolean; user: LoginResponse["user"] }>("auth/me/");
+          if (!response.success) return;
+          const u = response.user;
+          let role: UserRole = "System User";
+          if (u.is_superuser || u.is_staff) {
+            role = "Administrator";
+          } else if (u.groups && u.groups.length > 0) {
+            const matchedRole = u.groups.find((g: string) => availableRoles.includes(g as UserRole));
+            if (matchedRole) role = matchedRole as UserRole;
+          }
+          set((state) => ({
+            user: state.user
+              ? {
+                  ...state.user,
+                  id: u.id,
+                  username: u.username,
+                  email: u.email,
+                  first_name: u.first_name,
+                  last_name: u.last_name,
+                  role,
+                  home: roleHomeMap[role] || "/dashboard",
+                }
+              : null,
+          }));
+        } catch {
+          // If /me fails (e.g. expired token), silently skip — the
+          // api-client interceptor will handle token refresh or redirect.
+        }
       },
       setHydrated: (hydrated) => set({ hydrated }),
     }),

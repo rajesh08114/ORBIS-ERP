@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { erpService } from "@/services/erp-service";
 import { useAuthStore } from "@/stores/auth-store";
+import { apiClient } from "@/lib/api-client";
 import type { Order, Status, WorkOrder } from "@/types/erp";
 
 export function useDashboard() {
@@ -55,6 +56,7 @@ const mapOrder = (order: any, type: "sales" | "purchase"): Order => {
   
   return {
     id: order.reference || order.id?.toString(),
+    dbId: order.id,
     party: type === "sales" ? order.customer_name : order.vendor_name,
     value,
     due: order.created_at ? new Date(order.created_at).toLocaleDateString() : "",
@@ -141,3 +143,58 @@ export function useAuditEvents() {
     enabled: !!user,
   });
 }
+
+export function useAuditEntries(params?: Record<string, string | number>) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["auditEntries", params],
+    queryFn: () => erpService.auditEntries(params),
+    enabled: !!user,
+  });
+}
+
+export function useAuditSummary() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["auditSummary"],
+    queryFn: () => erpService.auditSummary(),
+    enabled: !!user,
+  });
+}
+
+export function useSalesOrderDetail(id: string | number) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["salesOrder", id],
+    queryFn: () => erpService.salesOrderDetail(id),
+    enabled: !!user && !!id,
+  });
+}
+
+export function usePurchaseOrderDetail(id: string | number) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["purchaseOrder", id],
+    queryFn: () => erpService.purchaseOrderDetail(id),
+    enabled: !!user && !!id,
+  });
+}
+
+export function useBoms() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["boms"],
+    queryFn: () => apiClient<any>("boms/").then((res: any) => res.results || res),
+    enabled: !!user,
+  });
+}
+
+export function useOperations() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["operations"],
+    queryFn: () => apiClient<any>("operations/").then((res: any) => res.results || res),
+    enabled: !!user,
+  });
+}
+

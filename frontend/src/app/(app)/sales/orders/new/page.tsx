@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/field";
+import { PartnerCombobox } from "@/components/ui/partner-combobox";
 import { toast } from "sonner";
 import { useCustomers, useProducts } from "@/hooks/use-erp";
 import { apiClient } from "@/lib/api-client";
@@ -92,14 +93,19 @@ export default function NewSalesOrderPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-[var(--foreground)]">Customer</span>
-              <Select {...register("customer")} className={errors.customer ? "border-[var(--danger)]" : ""}>
-                <option value="">Select Customer...</option>
-                {customers?.map((c: any) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name || c.customer_name || `Customer #${c.id}`}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                name="customer"
+                control={control}
+                render={({ field }) => (
+                  <PartnerCombobox
+                    value={field.value}
+                    onChange={(id) => field.onChange(id)}
+                    options={(customers || []).map((c: any) => ({ id: c.id, name: c.name || `Customer #${c.id}`, code: c.customer_code }))}
+                    placeholder="Type customer name..."
+                    className={errors.customer ? "border-[var(--danger)] rounded-[8px]" : ""}
+                  />
+                )}
+              />
               {errors.customer && (
                 <span className="text-xs text-[var(--danger)]">{errors.customer.message}</span>
               )}

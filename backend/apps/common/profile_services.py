@@ -85,7 +85,7 @@ def update_unified_profile(user: User, data: dict[str, Any]) -> dict[str, Any]:
     if "role" in data and data["role"] is not None:
         role_name = data["role"]
         # Remove from other ERP groups first
-        erp_groups = ["Sales User", "Purchase User", "Manufacturing User", "Inventory Manager", "Business Owner"]
+        erp_groups = ["Administrator", "Sales User", "Purchase User", "Manufacturing User", "Inventory Manager", "Business Owner"]
         for gname in erp_groups:
             group = Group.objects.filter(name=gname).first()
             if group:
@@ -94,6 +94,14 @@ def update_unified_profile(user: User, data: dict[str, Any]) -> dict[str, Any]:
         new_group = Group.objects.filter(name=role_name).first()
         if new_group:
             user.groups.add(new_group)
+            
+        # Sync Django staff/superuser privileges
+        if role_name == "Administrator":
+            user.is_staff = True
+            user.is_superuser = True
+        else:
+            user.is_staff = False
+            user.is_superuser = False
 
     user.save()
     common_profile.save()

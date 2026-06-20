@@ -8,7 +8,13 @@ import { useAuthStore } from "@/stores/auth-store";
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, hydrated } = useAuthStore();
+  const { user, hydrated, refreshUser } = useAuthStore();
+
+  useEffect(() => {
+    if (hydrated && user) {
+      refreshUser().catch(() => {});
+    }
+  }, [pathname, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;

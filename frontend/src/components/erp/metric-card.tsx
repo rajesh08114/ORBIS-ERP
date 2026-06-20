@@ -19,17 +19,17 @@ export function MetricCard({
   href?: string;
 }) {
   const cardContent = (
-    <Card className={`p-4 transition-all duration-200 ${href ? 'cursor-pointer hover:border-[var(--primary)] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]' : ''}`}>
-      <div className="flex items-start justify-between gap-3">
+    <Card className={`p-3 transition-all duration-200 ${href ? 'cursor-pointer hover:border-[var(--primary)] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]' : ''}`}>
+      <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="text-sm font-medium text-[var(--muted)]">{label}</div>
-          <div className="mt-3 text-3xl font-bold">{value}</div>
+          <div className="text-xs font-semibold text-[var(--muted)] tracking-wide uppercase">{label}</div>
+          <div className="mt-2 text-2xl font-extrabold tracking-tight">{value}</div>
         </div>
-        <div className="grid h-10 w-10 place-items-center rounded-[8px] bg-[var(--primary-soft)] text-[var(--primary)]">
-          <Icon className="h-5 w-5" />
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-[var(--primary-soft)] text-[var(--primary)] shrink-0 shadow-inner">
+          <Icon className="h-4 w-4" />
         </div>
       </div>
-      <Badge tone={tone} className="mt-4">
+      <Badge tone={tone} className="mt-3 text-[9px] font-bold px-1.5 py-0.5">
         {trend}
       </Badge>
     </Card>

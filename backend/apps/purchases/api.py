@@ -13,17 +13,22 @@ from apps.purchases.services import cancel_purchase_order, confirm_purchase_orde
 
 
 class PurchaseOrderLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_sku = serializers.CharField(source="product.sku", read_only=True)
+
     class Meta:
         model = PurchaseOrderLine
         fields = [
             "id",
             "order",
             "product",
+            "product_name",
+            "product_sku",
             "quantity_ordered",
             "quantity_received",
             "unit_cost",
         ]
-        read_only_fields = ["id", "quantity_received"]
+        read_only_fields = ["id", "quantity_received", "product_name", "product_sku"]
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
