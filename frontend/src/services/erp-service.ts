@@ -1,64 +1,31 @@
-import {
-  auditEvents,
-  customers,
-  dashboardSeries,
-  inventoryTransactions,
-  products,
-  purchaseOrders,
-  salesOrders,
-  vendors,
-  workOrders
-} from "@/mocks/erp-data";
-
-const wait = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms));
+import { apiClient } from "@/lib/api-client";
 
 export const erpService = {
   async dashboard() {
-    await wait();
-    return {
-      kpis: {
-        revenue: 12800000,
-        activeOrders: salesOrders.filter((order) => order.status !== "Completed").length,
-        inventoryHealth: 92,
-        manufacturingEfficiency: 96,
-        procurementRisk: purchaseOrders.filter((order) => order.risk === "High").length
-      },
-      series: dashboardSeries,
-      salesOrders: salesOrders.slice(0, 8),
-      purchaseOrders: purchaseOrders.slice(0, 8),
-      workOrders: workOrders.slice(0, 12)
-    };
+    return apiClient<any>("dashboard/");
   },
   async products() {
-    await wait();
-    return products;
+    return apiClient<any>("products/");
   },
   async customers() {
-    await wait();
-    return customers;
+    return apiClient<any>("customers/");
   },
   async vendors() {
-    await wait();
-    return vendors;
+    return apiClient<any>("vendors/");
   },
   async salesOrders() {
-    await wait();
-    return salesOrders;
+    return apiClient<any>("sales-orders/");
   },
   async purchaseOrders() {
-    await wait();
-    return purchaseOrders;
+    return apiClient<any>("purchase-orders/");
   },
   async workOrders() {
-    await wait();
-    return workOrders;
+    return apiClient<any>("work-orders/");
   },
   async inventoryTransactions() {
-    await wait();
-    return inventoryTransactions;
+    return apiClient<any>("stock-movements/");
   },
   async auditEvents() {
-    await wait();
-    return auditEvents;
+    return apiClient<any>("audit-logs/");
   }
 };

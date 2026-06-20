@@ -4,6 +4,8 @@ from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from django.db import transaction
+
 from apps.common.api import ERPActionPermission
 from apps.common.permissions import SALES_CONFIRM, SALES_CREATE, SALES_DELIVER, SALES_VIEW
 from apps.sales.models import SalesOrder, SalesOrderLine
@@ -28,6 +30,7 @@ class SalesOrderLineSerializer(serializers.ModelSerializer):
 class SalesOrderSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(read_only=True)
     lines = SalesOrderLineSerializer(many=True, read_only=True)
+    write_lines = serializers.ListField(child=serializers.DictField(), write_only=True, required=False)
 
     class Meta:
         model = SalesOrder
@@ -42,8 +45,24 @@ class SalesOrderSerializer(serializers.ModelSerializer):
             "confirmed_at",
             "delivered_at",
             "lines",
+            "write_lines",
         ]
         read_only_fields = ["id", "status", "created_at", "confirmed_at", "delivered_at", "customer_name", "lines"]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        write_lines = validated_data.pop("write_lines", [])
+        order = super().create(validated_data)
+        
+        for line_data in write_lines:
+            SalesOrderLine.objects.create(
+                order=order,
+                product_id=line_data.get("product"),
+                quantity_ordered=line_data.get("quantity_ordered", 1),
+                unit_price=line_data.get("unit_price", 0)
+            )
+            
+        return order
 
 
 class SalesOrderLineListSerializer(serializers.ModelSerializer):

@@ -1,51 +1,82 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useErpStore } from "@/stores/erp-store";
 import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Select, Textarea } from "@/components/ui/field";
 import { toast } from "sonner";
+import { useCustomers, useProducts } from "@/hooks/use-erp";
+import { apiClient } from "@/lib/api-client";
+import { Plus, Trash2 } from "lucide-react";
+
+const lineSchema = z.object({
+  product: z.string().min(1, "Product is required"),
+  quantity_ordered: z.coerce.number().min(1, "Quantity must be at least 1"),
+  unit_price: z.coerce.number().min(0, "Price cannot be negative"),
+});
 
 const schema = z.object({
-  customer: z.string().min(2, "Customer is required"),
-  requestedDate: z.string().min(1, "Requested date is required"),
-  value: z.coerce.number().min(1, "Order value must be greater than 0"),
-  notes: z.string().optional()
+  customer: z.string().min(1, "Customer is required"),
+  notes: z.string().optional(),
+  lines: z.array(lineSchema).min(1, "At least one order line is required"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
-  const customers = useErpStore((state) => state.customers);
-  const addSalesOrder = useErpStore((state) => state.addSalesOrder);
+  const { data: customers } = useCustomers();
+  const { data: products } = useProducts();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      customer: customers[0]?.name || "",
-      requestedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      value: 15000,
-      notes: ""
+      customer: "",
+      notes: "",
+      lines: [{ product: "", quantity_ordered: 1, unit_price: 0 }]
     }
   });
 
-  const onSubmit = (data: FormValues) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "lines"
+  });
+
+  const linesWatch = watch("lines");
+  const totalValue = linesWatch.reduce((sum, line) => sum + (Number(line.quantity_ordered) || 0) * (Number(line.unit_price) || 0), 0);
+
+  const onSubmit = async (data: FormValues) => {
     try {
-      addSalesOrder({
-        party: data.customer,
-        due: data.requestedDate,
-        value: data.value
+      // 1. Create the Sales Order
+      const orderRes = await apiClient<any>("sales-orders/", {
+        method: "POST",
+        body: JSON.stringify({
+          customer: parseInt(data.customer, 10),
+          notes: data.notes
+        })
       });
-      toast.success("Sales order created successfully.");
+
+      // 2. Create the Order Lines
+      await Promise.all(data.lines.map(line => 
+        apiClient("sales-order-lines/", {
+          method: "POST",
+          body: JSON.stringify({
+            order: orderRes.id,
+            product: parseInt(line.product, 10),
+            quantity_ordered: line.quantity_ordered,
+            unit_price: line.unit_price
+          })
+        })
+      ));
+
+      toast.success(`Sales order ${orderRes.reference || orderRes.id} created successfully.`);
       router.push("/sales/orders");
-    } catch (error) {
-      toast.error("Failed to create sales order.");
+    } catch (error: any) {
+      toast.error(`Failed to create sales order: ${error.message}`);
     }
   };
 
@@ -54,55 +85,101 @@ export default function NewSalesOrderPage() {
       <PageHeader
         eyebrow="Sales"
         title="Create Sales Order"
-        description="Production-grade form with validation, review fields, and dynamic database staging."
+        description="Select customer and add products to lines."
       />
-      <Card className="max-w-3xl p-6 border-[var(--border)] bg-[var(--surface)] rounded-[12px]">
+      <Card className="max-w-4xl p-6 border-[var(--border)] bg-[var(--surface)] rounded-[12px]">
         <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-2">
-            <span className="text-sm font-semibold text-[var(--foreground)]">Customer</span>
-            <Select {...register("customer")} className={errors.customer ? "border-[var(--danger)]" : ""}>
-              {customers.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name} ({c.segment})
-                </option>
-              ))}
-            </Select>
-            {errors.customer && (
-              <span className="text-xs text-[var(--danger)]">{errors.customer.message}</span>
-            )}
-          </div>
-
           <div className="grid gap-6 md:grid-cols-2">
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Requested Due Date</span>
-              <Input
-                type="date"
-                {...register("requestedDate")}
-                className={errors.requestedDate ? "border-[var(--danger)]" : ""}
-              />
-              {errors.requestedDate && (
-                <span className="text-xs text-[var(--danger)]">{errors.requestedDate.message}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Customer</span>
+              <Select {...register("customer")} className={errors.customer ? "border-[var(--danger)]" : ""}>
+                <option value="">Select Customer...</option>
+                {customers?.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name || c.customer_name || `Customer #${c.id}`}
+                  </option>
+                ))}
+              </Select>
+              {errors.customer && (
+                <span className="text-xs text-[var(--danger)]">{errors.customer.message}</span>
               )}
             </div>
 
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Order Value (USD)</span>
-              <Input
-                type="number"
-                placeholder="15000"
-                {...register("value")}
-                className={errors.value ? "border-[var(--danger)]" : ""}
-              />
-              {errors.value && (
-                <span className="text-xs text-[var(--danger)]">{errors.value.message}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Order Total</span>
+              <div className="flex h-10 w-full items-center rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-sm">
+                ${totalValue.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-md font-semibold text-[var(--foreground)]">Order Lines</h3>
+              <Button type="button" variant="secondary" onClick={() => append({ product: "", quantity_ordered: 1, unit_price: 0 })} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Add Line
+              </Button>
+            </div>
+            
+            <div className="border rounded-lg overflow-hidden border-[var(--border)]">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-[var(--surface-muted)] text-[var(--muted)]">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Product</th>
+                    <th className="px-4 py-2 font-medium w-24">Qty</th>
+                    <th className="px-4 py-2 font-medium w-32">Unit Price</th>
+                    <th className="px-4 py-2 font-medium w-32">Subtotal</th>
+                    <th className="px-4 py-2 w-12"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fields.map((field, index) => {
+                    const qty = Number(linesWatch[index]?.quantity_ordered) || 0;
+                    const price = Number(linesWatch[index]?.unit_price) || 0;
+                    const subtotal = qty * price;
+                    
+                    return (
+                      <tr key={field.id} className="border-t border-[var(--border)] bg-[var(--surface)]">
+                        <td className="px-4 py-2">
+                          <Select {...register(`lines.${index}.product` as const)} className="h-8">
+                            <option value="">Select Product...</option>
+                            {products?.map((p: any) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </Select>
+                          {errors.lines?.[index]?.product && <span className="text-[10px] text-[var(--danger)]">{errors.lines[index]?.product?.message}</span>}
+                        </td>
+                        <td className="px-4 py-2">
+                          <Input type="number" {...register(`lines.${index}.quantity_ordered` as const)} className="h-8 w-full" />
+                        </td>
+                        <td className="px-4 py-2">
+                          <Input type="number" step="0.01" {...register(`lines.${index}.unit_price` as const)} className="h-8 w-full" />
+                        </td>
+                        <td className="px-4 py-2 flex items-center h-12">
+                          ${subtotal.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          <button type="button" onClick={() => remove(index)} className="text-[var(--danger)] hover:opacity-80">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {errors.lines && !Array.isArray(errors.lines) && (
+                <div className="p-2 text-xs text-[var(--danger)] border-t border-[var(--border)]">
+                  {errors.lines.message as string}
+                </div>
               )}
             </div>
           </div>
 
           <div className="grid gap-2">
-            <span className="text-sm font-semibold text-[var(--foreground)]">Notes / Fulfillment Instructions</span>
+            <span className="text-sm font-semibold text-[var(--foreground)]">Notes</span>
             <Textarea
-              placeholder="Specify delivery constraints, custom production routing instructions, or customer notes"
+              placeholder="Specify delivery constraints or customer notes"
               {...register("notes")}
             />
           </div>
@@ -124,4 +201,3 @@ export default function NewSalesOrderPage() {
     </>
   );
 }
-

@@ -121,3 +121,23 @@ def receive_purchase_order(
         )
 
     return order
+
+@transaction.atomic
+def cancel_purchase_order(order: PurchaseOrder) -> PurchaseOrder:
+    order = PurchaseOrder.objects.select_for_update().prefetch_related("lines__product").get(pk=order.pk)
+
+    if order.status == PurchaseOrder.STATUS_DONE:
+        raise ValidationError("Received purchase orders cannot be cancelled.")
+
+    previous_status = order.status
+    order.status = PurchaseOrder.STATUS_CANCELLED
+    order.save(update_fields=["status"])
+    log_field_change(
+        entity_type="PurchaseOrder",
+        entity_id=str(order.pk),
+        action="status_changed",
+        field_name="status",
+        old_value=previous_status,
+        new_value=PurchaseOrder.STATUS_CANCELLED,
+    )
+    return order

@@ -1,24 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, Suspense, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth-store";
 
-type LoginValues = {
-  username: string;
-  password: string;
-};
+const signupSchema = z.object({
+  username: z.string()
+    .min(6, "Login Id must be at least 6 characters.")
+    .max(12, "Login Id must be at most 12 characters."),
+  email: z.string().email("Please enter a valid Email Id."),
+  password: z.string()
+    .min(9, "Password must be more than 8 characters.")
+    .regex(/[a-z]/, "Must contain at least one lowercase letter.")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter.")
+    .regex(/[\W_]/, "Must contain at least one special character."),
+  password_confirm: z.string()
+}).refine((data) => data.password === data.password_confirm, {
+  message: "Passwords do not match.",
+  path: ["password_confirm"],
+});
 
-function LoginContent() {
+type SignupValues = z.infer<typeof signupSchema>;
+
+function SignupContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const login = useAuthStore((state) => state.login);
+  const registerAction = useAuthStore((state) => state.register);
   const user = useAuthStore((state) => state.user);
   
-  const [isAdminMode, setIsAdminMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -32,11 +45,14 @@ function LoginContent() {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<LoginValues>({
+    formState: { errors, isSubmitting },
+  } = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
+      password_confirm: "",
     },
   });
 
@@ -52,33 +68,34 @@ function LoginContent() {
   }, []);
 
   const submit = handleSubmit(async (values) => {
-    const username = values.username.trim();
-    const password = values.password;
-
-    if (!username || !password) {
-      toast.error("Please enter both Login Id and Password.");
-      return;
-    }
-
     try {
-      const sessionUser = await login(username, password, isAdminMode);
+      const sessionUser = await registerAction({
+        username: values.username.trim(),
+        email: values.email.trim(),
+        password: values.password,
+        password_confirm: values.password_confirm
+      });
       if (!sessionUser) {
-        toast.error("Invalid Login Id or Password", {
-          description: isAdminMode ? "Ensure you have Administrator privileges." : "Please check your credentials and try again."
-        });
+        toast.error("Registration failed. Please try again.");
         return;
       }
-      toast.success(`Welcome back, ${sessionUser.username}.`);
-      const next = searchParams.get("next");
-      router.replace(next ?? sessionUser.home);
+      toast.success(`Account created successfully. Welcome, ${sessionUser.username}!`);
+      router.replace(sessionUser.home);
     } catch (error: any) {
-      toast.error(error.message || "Login failed due to a network error.", {
-        description: error.status === 0 ? "The server might be down or a CORS policy blocked the request." : "Please check your credentials and try again."
-      });
+      if (error.data) {
+        // Map backend errors
+        const errData = error.data;
+        if (errData.username) toast.error(`Login Id: ${errData.username[0]}`);
+        else if (errData.email) toast.error(`Email: ${errData.email[0]}`);
+        else if (errData.password) toast.error(`Password: ${errData.password[0]}`);
+        else toast.error(error.message || "Registration failed.");
+      } else {
+        toast.error(error.message || "Registration failed due to a network error.");
+      }
     }
   });
 
-  if (user) return null; // Avoid flashing login form while redirecting
+  if (user) return null; // Avoid flashing form while redirecting
 
   return (
     <div className="relative min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center overflow-x-hidden font-sans select-none">
@@ -106,57 +123,71 @@ function LoginContent() {
         />
       </div>
 
-      {/* Login Content Container */}
+      {/* Signup Content Container */}
       <main className="relative z-10 w-full max-w-sm px-4 py-8">
         
         {/* Logo & Header Branding */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <Link href="/" className="flex flex-col items-center group cursor-pointer">
             <div className="mb-4 p-3 bg-[#12b76a]/15 rounded-xl border border-[#12b76a]/25 text-[#12b76a] transition group-hover:scale-105">
               <div className="grid h-9 w-9 place-items-center rounded-full border-[6px] border-[#12b76a] bg-[#161618]">
                 <div className="h-3.5 w-3.5 rotate-45 rounded-[3px] bg-[#12b76a]" />
               </div>
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--foreground)] group-hover:text-[#12b76a] transition">ORBIS ERP</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--foreground)] group-hover:text-[var(--primary)] transition">ORBIS ERP</h1>
             <p className="text-sm text-[var(--muted)] mt-2 text-center opacity-80">
-              {isAdminMode ? "Login for System Administrator" : "Login for System User"}
+              Sign up Page
             </p>
           </Link>
         </div>
 
         {/* glass-panel Form Box */}
-        <div className="relative overflow-hidden rounded-2xl bg-[var(--surface)]/80 backdrop-blur-[12px] border border-[var(--border)] p-8 shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-[var(--surface)]/80 backdrop-blur-[12px] border border-[var(--border)] p-6 shadow-2xl">
           {/* subtle top border gradient highlight */}
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#12b76a]/60 to-transparent" />
           
-          <form onSubmit={submit} className="space-y-5">
+          <form onSubmit={submit} className="space-y-4">
             
             {/* Login Id Field */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]" htmlFor="username">
-                Login Id
+                Enter Login Id
               </label>
-              <div className="relative">
-                <input
-                  id="username"
-                  type="text"
-                  placeholder="Enter Login Id"
-                  className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
-                  {...register("username")}
-                />
-              </div>
+              <input
+                id="username"
+                type="text"
+                placeholder="6-12 characters"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                {...register("username")}
+              />
+              {errors.username && <p className="text-[#ef4444] text-[10px]">{errors.username.message}</p>}
+            </div>
+
+            {/* Email Field */}
+            <div className="space-y-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]" htmlFor="email">
+                Enter Email Id
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                {...register("email")}
+              />
+              {errors.email && <p className="text-[#ef4444] text-[10px]">{errors.email.message}</p>}
             </div>
 
             {/* Password Field */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]" htmlFor="password">
-                Password
+                Enter Password
               </label>
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter Password"
+                  placeholder="Strong password"
                   className="block w-full px-4 pr-12 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
                   {...register("password")}
                 />
@@ -178,6 +209,22 @@ function LoginContent() {
                   )}
                 </button>
               </div>
+              {errors.password && <p className="text-[#ef4444] text-[10px]">{errors.password.message}</p>}
+            </div>
+
+            {/* Re-Enter Password Field */}
+            <div className="space-y-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]" htmlFor="password_confirm">
+                Re-Enter Password
+              </label>
+              <input
+                id="password_confirm"
+                type={showPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                {...register("password_confirm")}
+              />
+              {errors.password_confirm && <p className="text-[#ef4444] text-[10px]">{errors.password_confirm.message}</p>}
             </div>
 
             {/* Submit button */}
@@ -187,42 +234,29 @@ function LoginContent() {
                 disabled={isSubmitting}
                 className="w-full flex justify-center items-center py-3.5 px-4 border border-[#12b76a] bg-transparent text-[#12b76a] text-sm font-semibold rounded-xl hover:bg-[#12b76a] hover:text-white active:scale-[0.98] transition shadow-lg disabled:opacity-60 cursor-pointer uppercase tracking-wider"
               >
-                SIGN IN
+                SIGN UP
               </button>
             </div>
             
             {/* Links */}
-            <div className="text-center pt-3 text-xs text-[var(--muted)] flex justify-center items-center space-x-1">
-              <a href="#" className="hover:text-[var(--foreground)] transition">Forget Password?</a>
-              <span>|</span>
-              <Link href="/signup" className="hover:text-[var(--foreground)] transition">Sign Up</Link>
+            <div className="text-center pt-3 text-xs text-[var(--muted)]">
+              Already have an account? <Link href="/login" className="text-[#34d399] hover:underline transition">Sign In</Link>
             </div>
           </form>
-        </div>
-
-        {/* Toggle Mode Button */}
-        <div className="mt-8 text-center">
-          <button
-            type="button"
-            onClick={() => setIsAdminMode(!isAdminMode)}
-            className="text-sm font-medium text-[#34d399] hover:underline"
-          >
-            {isAdminMode ? "Login as User" : "Login as System Administrator"}
-          </button>
         </div>
       </main>
     </div>
   );
 }
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <Suspense fallback={
       <div className="grid min-h-screen place-items-center bg-[var(--background)] text-sm text-[var(--muted)] font-bold">
-        Loading ORBIS login...
+        Loading ORBIS Signup...
       </div>
     }>
-      <LoginContent />
+      <SignupContent />
     </Suspense>
   );
 }

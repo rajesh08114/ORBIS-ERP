@@ -17,7 +17,7 @@ import {
 import type { UserRole } from "@/stores/auth-store";
 
 export const appRoutes = [
-  { href: "/dashboard", label: "Dashboard", icon: Home, group: "Core", roles: ["Administrator"] },
+  { href: "/dashboard", label: "Dashboard", icon: Home, group: "Core", roles: ["Administrator", "System User"] },
   { href: "/executive", label: "Executive", icon: Activity, group: "Core", roles: ["Administrator"] },
   {
     href: "/digital-twin",
@@ -114,6 +114,7 @@ const rolePrefixes: Record<UserRole, readonly string[]> = {
   "Procurement Manager": ["/purchase", "/procurement", "/help", "/profile", "/notifications", "/access-denied"],
   "Manufacturing Manager": ["/manufacturing", "/digital-twin", "/help", "/profile", "/notifications", "/access-denied"],
   "Sales Manager": ["/sales", "/products", "/customers", "/help", "/profile", "/notifications", "/access-denied"],
+  "System User": ["/dashboard", "/help", "/profile", "/notifications", "/access-denied"],
 };
 
 export function canAccessPath(pathname: string, role: UserRole) {

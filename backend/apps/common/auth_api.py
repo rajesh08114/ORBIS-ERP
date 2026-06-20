@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.exceptions import AuthenticationFailed
@@ -13,21 +14,45 @@ User = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True)
     password_confirm = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = ["username", "email", "password", "password_confirm", "first_name", "last_name"]
 
+    def validate_username(self, value):
+        if not (6 <= len(value) <= 12):
+            raise serializers.ValidationError("Login ID must be between 6 and 12 characters.")
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def validate_password(self, value):
+        if len(value) <= 8:
+            raise serializers.ValidationError("Password must be more than 8 characters long.")
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+        if not re.search(r'[\W_]', value):
+            raise serializers.ValidationError("Password must contain at least one special character.")
+        return value
+
     def validate(self, attrs):
-        if attrs["password"] != attrs["password_confirm"]:
+        if attrs.get("password") != attrs.get("password_confirm"):
             raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
         password = validated_data.pop("password")
+        # Ensure new users are standard users
+        validated_data["is_staff"] = False
+        validated_data["is_superuser"] = False
         user = User(**validated_data)
         user.set_password(password)
         user.save()

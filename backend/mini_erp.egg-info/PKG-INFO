@@ -1,0 +1,239 @@
+Metadata-Version: 2.4
+Name: mini-erp
+Version: 0.1.0
+Summary: Mini ERP starter based on the Demand to Delivery specification
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: Django<5.2,>=5.1
+Requires-Dist: django-cors-headers>=4.9.0
+Requires-Dist: django-environ<1.0,>=0.11
+Requires-Dist: django-redis<6.0,>=5.4
+Requires-Dist: djangorestframework<3.16,>=3.15
+Requires-Dist: djangorestframework-simplejwt<6.0,>=5.3
+Requires-Dist: drf-spectacular<1.0,>=0.27
+Requires-Dist: psycopg[binary]<4.0,>=3.2
+Requires-Dist: redis<6.0,>=5.0
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
+Requires-Dist: pytest-django<5.0,>=4.9; extra == "dev"
+Requires-Dist: ruff<1.0,>=0.6; extra == "dev"
+
+# Mini ERP Starter
+
+This repository is a Django starter for the "Mini ERP: From Demand to Delivery" spec.
+
+It gives you:
+- Django project structure
+- PostgreSQL configuration
+- Redis configuration
+- Environment-based settings
+- Logging setup
+- Docker and Docker Compose
+- `uv` and `venv` workflows
+- Starter app modules for ERP domains
+- A production-shaped service layer for inventory, sales, purchases, manufacturing, and audit logs
+
+## Project Layout
+
+- `config/` Django project, URL routing, and environment-specific settings
+- `apps/` domain apps for inventory, products, sales, purchases, manufacturing, common, and audit
+- `.env.example` local environment template
+- `docker-compose.yml` Postgres, Redis, and web service
+- `Makefile` common tasks
+- `pytest.ini` Django-aware test configuration
+
+## Quick Start With `uv`
+
+1. Copy the environment template:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+2. Install dependencies:
+
+```powershell
+uv sync --extra dev
+```
+
+3. Start PostgreSQL and Redis:
+
+```powershell
+docker compose up -d db redis
+```
+
+4. Run migrations:
+
+```powershell
+uv run python manage.py migrate
+```
+
+5. Start the development server:
+
+```powershell
+uv run python manage.py runserver
+```
+
+Open `http://127.0.0.1:8000/`.
+
+## Quick Start With `venv`
+
+1. Create the environment:
+
+```powershell
+python -m venv .venv
+```
+
+2. Activate it:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+3. Install the project:
+
+```powershell
+pip install -e .
+```
+
+4. Start PostgreSQL and Redis:
+
+```powershell
+docker compose up -d db redis
+```
+
+5. Run migrations and start the server:
+
+```powershell
+python manage.py migrate
+python manage.py runserver
+```
+
+## Docker Workflow
+
+Build and start everything:
+
+```powershell
+docker compose up --build
+```
+
+The web app will be available at `http://127.0.0.1:8000/`.
+
+If you see `password authentication failed for user "mini_erp"`, your Docker Postgres volume likely has stale credentials from an older run. Reset it and start fresh:
+
+```powershell
+make docker-reset-db
+make docker-up
+```
+
+## Makefile Targets
+
+- `make install`
+- `make venv`
+- `make sync`
+- `make run`
+- `make migrate`
+- `make makemigrations`
+- `make superuser`
+- `make check`
+- `make test`
+- `make lint`
+- `make docker-up`
+- `make docker-down`
+- `make docker-logs`
+
+## Environment Variables
+
+Update `.env` after copying from `.env.example`.
+
+Important settings:
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `DJANGO_ALLOWED_HOSTS`
+- `DJANGO_CSRF_TRUSTED_ORIGINS`
+- `DJANGO_LOG_LEVEL`
+
+## What Is Implemented
+
+The repo now covers the main business path from the PDF:
+- Product master data and stock ledger
+- Sales orders that reserve and deliver stock
+- Purchase orders that receive stock
+- Bill of materials and manufacturing orders
+- Audit log entries for key inventory and workflow events
+- Dashboard summary endpoint at `/dashboard/`
+- API sanity dashboard at `/sanity-dashboard/`
+- JWT sign in, sign up, token viewer, discovery, test runner, and export APIs
+
+## API Sanity Dashboard
+
+Open the dashboard at:
+
+```text
+/sanity-dashboard/
+```
+
+It provides:
+- Sign up and sign in pages
+- JWT access and refresh token storage
+- OpenAPI-based endpoint discovery for Django/DRF and FastAPI schemas
+- Sanity test execution for all endpoints, a module, or a single endpoint
+- Response inspection, health scoring, and export to JSON, CSV, and XLSX
+
+The backend APIs exposed by the dashboard live under:
+
+```text
+/sanity-dashboard/api/
+```
+
+Use the built-in management command to run checks from CI or a scheduler:
+
+```powershell
+uv run python manage.py run_sanity_checks --profile local
+```
+
+## Data Model
+
+- `Product` with `sales_price`, `cost_price`, `sku`, `on_hand_quantity`, `reserved_quantity`, and `procurement_strategy`
+- `StockMovement` ledger entries with before/after balances for on-hand and reserved stock
+- `SalesOrder` and `SalesOrderLine`
+- `PurchaseOrder` and `PurchaseOrderLine`
+- `BillOfMaterial`, `BillOfMaterialLine`, `ManufacturingOrder`, and `ManufacturingOrderLine`
+- `AuditLog`
+
+Example usage from the Django shell:
+
+```powershell
+uv run python manage.py shell
+```
+
+```python
+from apps.products.models import Product
+from apps.inventory.services import receive_stock, reserve_stock, deliver_stock
+
+product = Product.objects.create(name="Wooden Table", sales_price=100, cost_price=70)
+receive_stock(product=product, quantity=10, reference="PO-001")
+reserve_stock(product=product, quantity=3, reference="SO-001")
+deliver_stock(product=product, quantity=2, reference="SO-001")
+```
+
+You can also manage all models from Django admin once the superuser is created.
+
+## Tests
+
+The test suite uses `config.settings.test`, which still runs on PostgreSQL.
+Make sure your database server is running before executing tests.
+
+Run it with:
+
+```powershell
+uv run pytest
+```
+
+## Troubleshooting
+
+- If `make migrate` fails with Postgres authentication errors, confirm your `.env` `DATABASE_URL` matches the Postgres instance you are actually using.
+- If you are using the Docker stack and changed database credentials after the first run, clear the old volume with `make docker-reset-db` and bring services back up.
+- If the sanity dashboard returns 401, sign in at `/sanity-dashboard/signin/` first so the UI can attach a JWT access token to requests.

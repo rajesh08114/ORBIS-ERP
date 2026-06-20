@@ -4,10 +4,12 @@ from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from django.db import transaction
+
 from apps.common.api import ERPActionPermission
 from apps.common.permissions import PURCHASE_CREATE, PURCHASE_RECEIVE, PURCHASE_VIEW
 from apps.purchases.models import PurchaseOrder, PurchaseOrderLine
-from apps.purchases.services import confirm_purchase_order, receive_purchase_order
+from apps.purchases.services import cancel_purchase_order, confirm_purchase_order, receive_purchase_order
 
 
 class PurchaseOrderLineSerializer(serializers.ModelSerializer):
@@ -27,6 +29,7 @@ class PurchaseOrderLineSerializer(serializers.ModelSerializer):
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     vendor_name = serializers.CharField(read_only=True)
     lines = PurchaseOrderLineSerializer(many=True, read_only=True)
+    write_lines = serializers.ListField(child=serializers.DictField(), write_only=True, required=False)
 
     class Meta:
         model = PurchaseOrder
@@ -44,8 +47,24 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "confirmed_at",
             "received_at",
             "lines",
+            "write_lines",
         ]
         read_only_fields = ["id", "status", "created_at", "confirmed_at", "received_at", "vendor_name", "lines"]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        write_lines = validated_data.pop("write_lines", [])
+        order = super().create(validated_data)
+        
+        for line_data in write_lines:
+            PurchaseOrderLine.objects.create(
+                order=order,
+                product_id=line_data.get("product"),
+                quantity_ordered=line_data.get("quantity_ordered", 1),
+                unit_cost=line_data.get("unit_cost", 0)
+            )
+            
+        return order
 
 
 class PurchaseOrderLineListSerializer(serializers.ModelSerializer):
@@ -78,6 +97,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         "destroy": [PURCHASE_CREATE],
         "confirm": [PURCHASE_CREATE],
         "receive": [PURCHASE_RECEIVE],
+        "cancel": [PURCHASE_CREATE],
     }
 
     @action(detail=True, methods=["post"])
@@ -99,6 +119,12 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
                 quantities_by_line[int(line_id)] = Decimal(str(item.get("quantity", 0)))
         receive_purchase_order(order, quantities_by_line=quantities_by_line or None)
         return Response(self.get_serializer(order).data)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        order = self.get_object()
+        cancel_purchase_order(order)
+        return Response(self.get_serializer(order).data, status=status.HTTP_200_OK)
 
 
 class PurchaseOrderLineViewSet(viewsets.ModelViewSet):

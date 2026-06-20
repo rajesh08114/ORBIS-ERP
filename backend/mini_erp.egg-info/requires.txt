@@ -1,0 +1,14 @@
+Django<5.2,>=5.1
+django-cors-headers>=4.9.0
+django-environ<1.0,>=0.11
+django-redis<6.0,>=5.4
+djangorestframework<3.16,>=3.15
+djangorestframework-simplejwt<6.0,>=5.3
+drf-spectacular<1.0,>=0.27
+psycopg[binary]<4.0,>=3.2
+redis<6.0,>=5.0
+
+[dev]
+pytest<9.0,>=8.0
+pytest-django<5.0,>=4.9
+ruff<1.0,>=0.6
