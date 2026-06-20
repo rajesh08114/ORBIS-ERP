@@ -1,0 +1,93 @@
+from django.db.models import DecimalField, ExpressionWrapper, F, Sum, Value
+from django.db.models.functions import Coalesce
+
+from apps.inventory.models import StockMovement
+from apps.manufacturing.models import ManufacturingOrder
+from apps.products.models import Product
+from apps.purchases.models import PurchaseOrder
+from apps.sales.models import SalesOrder
+
+
+def get_dashboard_metrics():
+    inventory_value = Product.objects.aggregate(
+        total=Coalesce(
+            Sum(
+                ExpressionWrapper(
+                    F("on_hand_quantity") * F("cost_price"),
+                    output_field=DecimalField(max_digits=18, decimal_places=2),
+                )
+            ),
+            Value(0, output_field=DecimalField(max_digits=18, decimal_places=2)),
+        )
+    )["total"]
+
+    top_selling_products = list(
+        Product.objects.annotate(
+            sold_qty=Coalesce(Sum("sales_order_lines__quantity_delivered"), 0),
+        )
+        .filter(sold_qty__gt=0)
+        .order_by("-sold_qty", "name")
+        .values("id", "name", "sku", "sold_qty")[:5]
+    )
+
+    return {
+        "products": {
+            "total": Product.objects.count(),
+            "on_hand_quantity": str(Product.objects.aggregate(total=Sum("on_hand_quantity"))["total"] or 0),
+            "reserved_quantity": str(Product.objects.aggregate(total=Sum("reserved_quantity"))["total"] or 0),
+            "low_stock": Product.objects.annotate(
+                free_qty=F("on_hand_quantity") - F("reserved_quantity")
+            ).filter(free_qty__lte=5).count(),
+        },
+        "sales": {
+            "total": SalesOrder.objects.count(),
+            "pending": SalesOrder.objects.filter(
+                status__in=[SalesOrder.STATUS_DRAFT, SalesOrder.STATUS_CONFIRMED, SalesOrder.STATUS_PARTIAL]
+            ).count(),
+            "partially_delivered": SalesOrder.objects.filter(status=SalesOrder.STATUS_PARTIAL).count(),
+            "done": SalesOrder.objects.filter(status=SalesOrder.STATUS_DONE).count(),
+        },
+        "purchases": {
+            "total": PurchaseOrder.objects.count(),
+            "pending": PurchaseOrder.objects.filter(
+                status__in=[PurchaseOrder.STATUS_DRAFT, PurchaseOrder.STATUS_CONFIRMED, PurchaseOrder.STATUS_PARTIAL]
+            ).count(),
+            "partial_receipts": PurchaseOrder.objects.filter(status=PurchaseOrder.STATUS_PARTIAL).count(),
+            "done": PurchaseOrder.objects.filter(status=PurchaseOrder.STATUS_DONE).count(),
+        },
+        "manufacturing": {
+            "total": ManufacturingOrder.objects.count(),
+            "pending": ManufacturingOrder.objects.filter(
+                status__in=[
+                    ManufacturingOrder.STATUS_DRAFT,
+                    ManufacturingOrder.STATUS_CONFIRMED,
+                    ManufacturingOrder.STATUS_IN_PROGRESS,
+                ]
+            ).count(),
+            "delayed": ManufacturingOrder.objects.filter(
+                status__in=[ManufacturingOrder.STATUS_CONFIRMED, ManufacturingOrder.STATUS_IN_PROGRESS]
+            ).count(),
+            "done": ManufacturingOrder.objects.filter(status=ManufacturingOrder.STATUS_DONE).count(),
+        },
+        "procurement": {
+            "triggered": PurchaseOrder.objects.filter(created_by_system=True).count()
+            + ManufacturingOrder.objects.filter(created_by_system=True).count(),
+        },
+        "inventory_value": str(inventory_value or 0),
+        "top_selling_products": top_selling_products,
+        "stock_movements": {
+            "total": StockMovement.objects.count(),
+            "recent": [
+                {
+                    "created_at": movement.created_at.isoformat(),
+                    "product_id": movement.product_id,
+                    "movement_type": movement.movement_type,
+                    "on_hand_delta": str(movement.on_hand_delta),
+                    "reserved_delta": str(movement.reserved_delta),
+                    "reference": movement.reference,
+                }
+                for movement in StockMovement.objects.order_by("-created_at", "-id")[:10]
+            ],
+        },
+    }
+

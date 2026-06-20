@@ -1,0 +1,53 @@
+{% extends "api_dashboard/base.html" %}
+{% block title %}Sign In | API Sanity Dashboard{% endblock %}
+{% block content %}
+<main class="mx-auto flex min-h-screen max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
+  <div class="grid w-full gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+    <section class="flex flex-col justify-between rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-glow backdrop-blur-xl">
+      <div>
+        <span class="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200">Enterprise API Operations</span>
+        <h1 class="mt-6 max-w-2xl font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">One control plane for auth, discovery, testing, and API health.</h1>
+        <p class="mt-4 max-w-xl text-sm leading-6 text-slate-300">Sign in to inspect JWTs, auto-discover backend APIs, execute sanity checks, and export audit-ready reports without hardcoding a single endpoint.</p>
+      </div>
+      <div class="mt-10 grid gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Discovery</p>
+          <p class="mt-2 text-2xl font-bold text-white">OpenAPI</p>
+          <p class="mt-1 text-sm text-slate-400">DRF and FastAPI aware</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Tests</p>
+          <p class="mt-2 text-2xl font-bold text-white">5 modes</p>
+          <p class="mt-1 text-sm text-slate-400">Connectivity to validation</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+          <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Security</p>
+          <p class="mt-2 text-2xl font-bold text-white">Masked</p>
+          <p class="mt-1 text-sm text-slate-400">Secrets stay hidden</p>
+        </div>
+      </div>
+    </section>
+    <section class="rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-glow backdrop-blur-xl">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-200">Welcome back</p>
+          <h2 class="mt-2 text-2xl font-bold text-white">Sign in</h2>
+        </div>
+        <a class="text-sm text-cyan-200 hover:text-cyan-100" href="{% url 'api-dashboard-signup' %}">Create account</a>
+      </div>
+      <form id="signin-form" class="space-y-4">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-slate-300" for="login-identifier">Username or email</label>
+          <input id="login-identifier" name="identifier" type="text" class="dashboard-input" placeholder="jane.doe or jane@company.com" required>
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-slate-300" for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" class="dashboard-input" placeholder="••••••••" required>
+        </div>
+        <button class="dashboard-button w-full" type="submit">Sign in</button>
+      </form>
+      <div id="auth-message" class="mt-4 rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-300"></div>
+    </section>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,173 @@
+@import "tailwindcss" source(none);
+@source "../**/*.{ts,tsx}";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --background: #fff7f9;
+  --foreground: #1e1b1d;
+  --surface: #ffffff;
+  --surface-muted: #faf3f5;
+  --surface-raised: #f5edef;
+  --surface-high: #ede4e7;
+  --border: #d8cbd1;
+  --muted: #4e444a;
+  --primary: #57344f;
+  --primary-strong: #714b67;
+  --primary-soft: #f6dceb;
+  --primary-fg: #ffffff;
+  --secondary: #7c5071;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #ba1a1a;
+  --danger-soft: #ffdad6;
+  --info: #2563eb;
+  --info-soft: #dbeafe;
+  --shadow: 0 12px 30px rgba(87, 52, 79, 0.06);
+  --radius: 8px;
+
+  /* Recharts custom CSS variables */
+  --chart-1: #57344f;
+  --chart-2: #7c5071;
+  --chart-3: #2563eb;
+  --chart-4: #15803d;
+  --chart-5: #b45309;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0d0d0f;
+  --foreground: #f8fafc;
+  --surface: #161618;
+  --surface-muted: #1f1f22;
+  --surface-raised: #2a2a2d;
+  --surface-high: #353538;
+  --border: #222124;
+  --muted: #94a3b8;
+  --primary: #12b76a;
+  --primary-strong: #0ca35c;
+  --primary-soft: #14351f;
+  --primary-fg: #0d0d0f;
+  --secondary: #34d399;
+  --success: #12b76a;
+  --success-soft: #14351f;
+  --warning: #fbbf24;
+  --warning-soft: #3c2c0d;
+  --danger: #f87171;
+  --danger-soft: #451a1a;
+  --info: #3b82f6;
+  --info-soft: #1e3a8a;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+
+  /* Recharts custom CSS variables */
+  --chart-1: #12b76a;
+  --chart-2: #34d399;
+  --chart-3: #3b82f6;
+  --chart-4: #f43f5e;
+  --chart-5: #eab308;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-block-start: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--primary-soft);
+}
+
+.app-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.glass {
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.login-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--border) 70%, transparent) 0.6px, transparent 0.6px);
+  background-size: 24px 24px;
+}
+
+.login-glass {
+  border: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(20px);
+}
+
+.marketing-page section[id] {
+  scroll-margin-top: 80px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

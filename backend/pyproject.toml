@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-erp"
+version = "0.1.0"
+description = "Mini ERP starter based on the Demand to Delivery specification"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "Django>=5.1,<5.2",
+  "django-environ>=0.11,<1.0",
+  "django-redis>=5.4,<6.0",
+  "djangorestframework>=3.15,<3.16",
+  "djangorestframework-simplejwt>=5.3,<6.0",
+  "drf-spectacular>=0.27,<1.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "redis>=5.0,<6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0,<9.0",
+  "pytest-django>=4.9,<5.0",
+  "ruff>=0.6,<1.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["config*", "apps*"]
+
+[tool.ruff]
+line-length = 100

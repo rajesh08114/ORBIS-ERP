@@ -1,0 +1,57 @@
+{% extends "api_dashboard/base.html" %}
+{% block title %}Sign Up | API Sanity Dashboard{% endblock %}
+{% block content %}
+<main class="mx-auto flex min-h-screen max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
+  <div class="grid w-full gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+    <section class="rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-glow backdrop-blur-xl">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.25em] text-cyan-200">Create access</p>
+          <h2 class="mt-2 text-2xl font-bold text-white">Sign up</h2>
+        </div>
+        <a class="text-sm text-cyan-200 hover:text-cyan-100" href="{% url 'api-dashboard-signin' %}">Sign in</a>
+      </div>
+      <form id="signup-form" class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-300" for="signup-username">Username</label>
+            <input id="signup-username" name="username" type="text" class="dashboard-input" required>
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-300" for="signup-email">Email</label>
+            <input id="signup-email" name="email" type="email" class="dashboard-input" required>
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-300" for="signup-password">Password</label>
+            <input id="signup-password" name="password" type="password" class="dashboard-input" required>
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-slate-300" for="signup-confirm">Confirm password</label>
+            <input id="signup-confirm" name="confirm" type="password" class="dashboard-input" required>
+          </div>
+        </div>
+        <button class="dashboard-button w-full" type="submit">Create account</button>
+      </form>
+      <div id="auth-message" class="mt-4 rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-300"></div>
+    </section>
+    <section class="flex flex-col justify-between rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-glow backdrop-blur-xl">
+      <div>
+        <span class="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-200">JWT first</span>
+        <h1 class="mt-6 max-w-2xl font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl">Bootstrap your dashboard identity and let the runner attach tokens automatically.</h1>
+        <p class="mt-4 max-w-xl text-sm leading-6 text-slate-300">After registration, the app stores access and refresh tokens, exposes a token viewer, and refreshes access tokens when they expire.</p>
+      </div>
+      <div class="mt-10 rounded-3xl border border-white/10 bg-slate-950/60 p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Included</p>
+        <ul class="mt-4 space-y-3 text-sm text-slate-300">
+          <li>Username or email sign-in</li>
+          <li>JWT access and refresh storage</li>
+          <li>Masked secrets and token claims</li>
+          <li>Roles, permissions, and user info</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}
