@@ -30,8 +30,8 @@ export default function VendorsPage() {
       <PageHeader eyebrow="Vendor Management" title="Vendor Directory" description="Vendor cards, performance ratings, renewals, spend trends, and risk assessment." action="Add Vendor" />
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Vendors" value={data.length.toString()} trend="100+ suppliers" icon={Users} tone="info" />
-        <MetricCard label="Avg Rating" value={`${Math.round(data.reduce((sum, vendor) => sum + vendor.rating, 0) / data.length)}%`} trend="Reliable" icon={Star} tone="success" />
-        <MetricCard label="Logistics Partners" value={data.filter((vendor) => vendor.category === "Logistics").length.toString()} trend="Active" icon={Truck} tone="primary" />
+        <MetricCard label="Avg Rating" value={`${Math.round(data.reduce((sum: number, vendor: any) => sum + vendor.rating, 0) / data.length)}%`} trend="Reliable" icon={Star} tone="success" />
+        <MetricCard label="Logistics Partners" value={data.filter((vendor: any) => vendor.category === "Logistics").length.toString()} trend="Active" icon={Truck} tone="primary" />
       </div>
       <div className="mt-4">
         <DataTable data={data} columns={columns} />

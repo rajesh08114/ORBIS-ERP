@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from apps.partners.models import Vendor
@@ -27,6 +28,13 @@ class PurchaseOrder(models.Model):
         on_delete=models.SET_NULL,
         related_name="purchase_orders",
     )
+    assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="purchase_orders",
+    )
     source_sales_order = models.ForeignKey(
         "sales.SalesOrder",
         null=True,
@@ -39,6 +47,7 @@ class PurchaseOrder(models.Model):
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    scheduled_date = models.DateTimeField(null=True, blank=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     received_at = models.DateTimeField(null=True, blank=True)
 

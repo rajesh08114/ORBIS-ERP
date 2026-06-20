@@ -104,11 +104,11 @@ function SignupContent() {
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Glow Spheres */}
         <div 
-          className="absolute -top-[10%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[#12b76a]/20 blur-[120px] transition-transform duration-300 ease-out" 
+          className="absolute -top-[10%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[var(--primary)]/15 blur-[120px] transition-transform duration-300 ease-out" 
           style={{ transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)` }}
         />
         <div 
-          className="absolute -bottom-[10%] -left-[10%] w-[600px] h-[600px] rounded-full bg-[#34d399]/10 blur-[120px] transition-transform duration-300 ease-out" 
+          className="absolute -bottom-[10%] -left-[10%] w-[600px] h-[600px] rounded-full bg-[var(--secondary)]/10 blur-[120px] transition-transform duration-300 ease-out" 
           style={{ transform: `translate(${-mousePosition.x}px, ${-mousePosition.y}px)` }}
         />
         
@@ -129,9 +129,9 @@ function SignupContent() {
         {/* Logo & Header Branding */}
         <div className="flex flex-col items-center mb-6">
           <Link href="/" className="flex flex-col items-center group cursor-pointer">
-            <div className="mb-4 p-3 bg-[#12b76a]/15 rounded-xl border border-[#12b76a]/25 text-[#12b76a] transition group-hover:scale-105">
-              <div className="grid h-9 w-9 place-items-center rounded-full border-[6px] border-[#12b76a] bg-[#161618]">
-                <div className="h-3.5 w-3.5 rotate-45 rounded-[3px] bg-[#12b76a]" />
+            <div className="mb-4 p-3 bg-[var(--primary-soft)] rounded-xl border border-[var(--border)] text-[var(--primary)] transition group-hover:scale-105">
+              <div className="grid h-9 w-9 place-items-center rounded-full border-[6px] border-[var(--primary-strong)] bg-[var(--surface)]">
+                <div className="h-3.5 w-3.5 rotate-45 rounded-[3px] bg-[var(--primary-strong)]" />
               </div>
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-[var(--foreground)] group-hover:text-[var(--primary)] transition">ORBIS ERP</h1>
@@ -144,7 +144,7 @@ function SignupContent() {
         {/* glass-panel Form Box */}
         <div className="relative overflow-hidden rounded-2xl bg-[var(--surface)]/80 backdrop-blur-[12px] border border-[var(--border)] p-6 shadow-2xl">
           {/* subtle top border gradient highlight */}
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#12b76a]/60 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent" />
           
           <form onSubmit={submit} className="space-y-4">
             
@@ -157,7 +157,7 @@ function SignupContent() {
                 id="username"
                 type="text"
                 placeholder="6-12 characters"
-                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/60 transition text-sm"
                 {...register("username")}
               />
               {errors.username && <p className="text-[#ef4444] text-[10px]">{errors.username.message}</p>}
@@ -172,7 +172,7 @@ function SignupContent() {
                 id="email"
                 type="email"
                 placeholder="name@company.com"
-                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/60 transition text-sm"
                 {...register("email")}
               />
               {errors.email && <p className="text-[#ef4444] text-[10px]">{errors.email.message}</p>}
@@ -188,7 +188,7 @@ function SignupContent() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Strong password"
-                  className="block w-full px-4 pr-12 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                  className="block w-full px-4 pr-12 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/60 transition text-sm"
                   {...register("password")}
                 />
                 <button
@@ -221,7 +221,7 @@ function SignupContent() {
                 id="password_confirm"
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirm password"
-                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#12b76a]/60 transition text-sm"
+                className="block w-full px-4 py-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/60 transition text-sm"
                 {...register("password_confirm")}
               />
               {errors.password_confirm && <p className="text-[#ef4444] text-[10px]">{errors.password_confirm.message}</p>}
@@ -232,7 +232,7 @@ function SignupContent() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center items-center py-3.5 px-4 border border-[#12b76a] bg-transparent text-[#12b76a] text-sm font-semibold rounded-xl hover:bg-[#12b76a] hover:text-white active:scale-[0.98] transition shadow-lg disabled:opacity-60 cursor-pointer uppercase tracking-wider"
+                className="w-full flex justify-center items-center py-3.5 px-4 border border-[var(--primary-strong)] bg-transparent text-[var(--primary-strong)] text-sm font-semibold rounded-xl hover:bg-[var(--primary-strong)] hover:text-white dark:hover:text-[var(--primary-fg)] active:scale-[0.98] transition shadow-lg disabled:opacity-60 cursor-pointer uppercase tracking-wider"
               >
                 SIGN UP
               </button>
@@ -240,7 +240,7 @@ function SignupContent() {
             
             {/* Links */}
             <div className="text-center pt-3 text-xs text-[var(--muted)]">
-              Already have an account? <Link href="/login" className="text-[#34d399] hover:underline transition">Sign In</Link>
+              Already have an account? <Link href="/login" className="text-[var(--primary-strong)] dark:text-[var(--secondary)] hover:underline transition">Sign In</Link>
             </div>
           </form>
         </div>

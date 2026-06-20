@@ -11,6 +11,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       queries: {
         staleTime: 1000 * 60 * 5, // Keep query data fresh for 5 minutes to prevent instant reloading
         refetchOnWindowFocus: false, // Prevent distracting background refetches when focusing window
+        retry(failureCount, error: any) {
+          if (error?.status === 401 || error?.status === 403) {
+            return false;
+          }
+          return failureCount < 3;
+        }
       }
     }
   }));

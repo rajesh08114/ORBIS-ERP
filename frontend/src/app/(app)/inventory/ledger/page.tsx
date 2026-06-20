@@ -50,7 +50,7 @@ export default function InventoryLedgerPage() {
 
   const filteredData = filterType === "All" 
     ? data 
-    : data.filter((t) => t.type === filterType);
+    : data.filter((t: any) => t.type === filterType);
 
   const types = ["All", "Receipt", "Issue", "Transfer", "Adjustment"];
 

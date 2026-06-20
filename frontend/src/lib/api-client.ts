@@ -66,6 +66,18 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        const pathname = window.location.pathname;
+        if (pathname !== "/login" && pathname !== "/signup") {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("orbis-auth");
+          window.location.href = `/login?next=${encodeURIComponent(pathname)}`;
+        }
+      }
+    }
+
     let errorData;
     try {
       errorData = await response.json();

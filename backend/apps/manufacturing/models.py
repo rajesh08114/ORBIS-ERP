@@ -62,6 +62,7 @@ class ManufacturingOrder(models.Model):
     STATUS_CONFIRMED = "confirmed"
     STATUS_IN_PROGRESS = "in_progress"
     STATUS_DONE = "done"
+    STATUS_TO_CLOSE = "to_close"
     STATUS_CANCELLED = "cancelled"
 
     STATUS_CHOICES = [
@@ -69,6 +70,7 @@ class ManufacturingOrder(models.Model):
         (STATUS_CONFIRMED, "Confirmed"),
         (STATUS_IN_PROGRESS, "In Progress"),
         (STATUS_DONE, "Done"),
+        (STATUS_TO_CLOSE, "To Close"),
         (STATUS_CANCELLED, "Cancelled"),
     ]
 
@@ -107,6 +109,7 @@ class ManufacturingOrder(models.Model):
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_DRAFT)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    scheduled_date = models.DateTimeField(null=True, blank=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 

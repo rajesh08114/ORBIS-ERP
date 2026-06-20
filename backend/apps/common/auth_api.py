@@ -60,10 +60,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    groups = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "is_staff", "is_superuser"]
+        fields = ["id", "username", "email", "first_name", "last_name", "is_staff", "is_superuser", "groups"]
         read_only_fields = fields
+
+    def get_groups(self, obj):
+        return [g.name for g in obj.groups.all()]
 
 
 class LoginSerializer(TokenObtainPairSerializer):
@@ -140,3 +145,38 @@ class LogoutAPIView(APIView):
                 {"success": False, "message": f"Logout failed: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class ChangePasswordAPIView(APIView):
+    schema = None
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+        if not old_password or not new_password:
+            return Response(
+                {"success": False, "message": "Both old_password and new_password fields are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not user.check_password(old_password):
+            return Response(
+                {"success": False, "message": "Incorrect current password."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            validate_password(new_password, user)
+        except Exception as e:
+            # Handle Django validation error details
+            error_message = list(e.messages)[0] if hasattr(e, "messages") else str(e)
+            return Response(
+                {"success": False, "message": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.set_password(new_password)
+        user.save()
+        return Response(
+            {"success": True, "message": "Password updated successfully."},
+            status=status.HTTP_200_OK,
+        )

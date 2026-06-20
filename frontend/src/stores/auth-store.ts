@@ -9,15 +9,23 @@ export type UserRole =
   | "System User"
   | "Inventory Manager"
   | "Procurement Manager"
+  | "Purchase User"
   | "Manufacturing Manager"
-  | "Sales Manager";
+  | "Manufacturing User"
+  | "Sales Manager"
+  | "Sales User"
+  | "Business Owner";
 
 export const availableRoles: UserRole[] = [
   "Administrator",
   "Inventory Manager",
   "Procurement Manager",
+  "Purchase User",
   "Manufacturing Manager",
+  "Manufacturing User",
   "Sales Manager",
+  "Sales User",
+  "Business Owner",
 ];
 
 const roleHomeMap: Record<string, string> = {
@@ -25,8 +33,12 @@ const roleHomeMap: Record<string, string> = {
   "System User": "/dashboard",
   "Inventory Manager": "/inventory",
   "Procurement Manager": "/purchase/orders",
+  "Purchase User": "/purchase/orders",
   "Manufacturing Manager": "/manufacturing/command-center",
+  "Manufacturing User": "/manufacturing/command-center",
   "Sales Manager": "/sales/orders",
+  "Sales User": "/sales/orders",
+  "Business Owner": "/dashboard",
 };
 
 export type SessionUser = {
@@ -52,6 +64,7 @@ type LoginResponse = {
     last_name: string;
     is_staff: boolean;
     is_superuser: boolean;
+    groups?: string[];
   };
 };
 
@@ -83,7 +96,15 @@ export const useAuthStore = create<AuthState>()(
               return null;
             }
             
-            const role: UserRole = response.user.is_superuser || response.user.is_staff ? "Administrator" : "System User";
+            let role: UserRole = "System User";
+            if (response.user.is_superuser || response.user.is_staff) {
+              role = "Administrator";
+            } else if (response.user.groups && response.user.groups.length > 0) {
+              const matchedRole = response.user.groups.find((g: string) => availableRoles.includes(g as UserRole));
+              if (matchedRole) {
+                role = matchedRole as UserRole;
+              }
+            }
 
             setAuthToken(response.access);
             if (typeof window !== "undefined") {
@@ -120,7 +141,15 @@ export const useAuthStore = create<AuthState>()(
             if (typeof window !== "undefined") {
               localStorage.setItem("refresh_token", response.refresh);
             }
-            const role: UserRole = "System User"; // Default for new signups
+            let role: UserRole = "System User";
+            if (response.user.is_superuser || response.user.is_staff) {
+              role = "Administrator";
+            } else if (response.user.groups && response.user.groups.length > 0) {
+              const matchedRole = response.user.groups.find((g: string) => availableRoles.includes(g as UserRole));
+              if (matchedRole) {
+                role = matchedRole as UserRole;
+              }
+            }
             const session: SessionUser = {
               id: response.user.id,
               username: response.user.username,

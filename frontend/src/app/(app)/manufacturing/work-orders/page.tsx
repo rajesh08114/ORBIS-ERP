@@ -20,7 +20,7 @@ export default function WorkOrdersListPage() {
 
   const filteredData = filterPriority === "All" 
     ? data 
-    : data.filter((wo) => wo.priority === filterPriority);
+    : data.filter((wo: any) => wo.priority === filterPriority);
 
   const columns: ColumnDef<WorkOrder>[] = [
     { 

@@ -37,6 +37,7 @@ export type Order = {
   due: string;
   status: Status;
   risk: "Low" | "Medium" | "High";
+  scheduled_date?: string;
 };
 
 export type WorkOrder = {

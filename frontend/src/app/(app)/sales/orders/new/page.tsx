@@ -11,7 +11,7 @@ import { Input, Select, Textarea } from "@/components/ui/field";
 import { toast } from "sonner";
 import { useCustomers, useProducts } from "@/hooks/use-erp";
 import { apiClient } from "@/lib/api-client";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "@/components/icons";
 
 const lineSchema = z.object({
   product: z.string().min(1, "Product is required"),

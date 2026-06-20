@@ -26,8 +26,8 @@ export default function InventoryPage() {
   const transactions = useInventoryTransactions();
   if (products.isLoading || transactions.isLoading || !products.data || !transactions.data) return <LoadingState />;
 
-  const onHand = products.data.reduce((sum, item) => sum + item.onHand, 0);
-  const reserved = products.data.reduce((sum, item) => sum + item.reserved, 0);
+  const onHand = products.data.reduce((sum: number, item: any) => sum + item.onHand, 0);
+  const reserved = products.data.reduce((sum: number, item: any) => sum + item.reserved, 0);
 
   return (
     <>
@@ -71,7 +71,7 @@ export default function InventoryPage() {
         <MetricCard label="On Hand" value={onHand.toLocaleString()} trend="All locations" icon={Boxes} tone="success" />
         <MetricCard label="Reserved" value={reserved.toLocaleString()} trend="Demand committed" icon={Activity} tone="warning" />
         <MetricCard label="Available" value={(onHand - reserved).toLocaleString()} trend="Healthy" icon={ArrowDownUp} tone="success" />
-        <MetricCard label="Risk Items" value={products.data.filter((item) => item.status === "Critical").length.toString()} trend="Shortage watch" icon={ShieldAlert} tone="danger" />
+        <MetricCard label="Risk Items" value={products.data.filter((item: any) => item.status === "Critical").length.toString()} trend="Shortage watch" icon={ShieldAlert} tone="danger" />
       </div>
       <div className="mt-4">
         <DataTable data={transactions.data.slice(0, 120)} columns={columns} />

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { useUiStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { ProfileDropdown } from "@/components/layout/profile-dropdown";
 
 const workspaces = [
   { id: "primary", name: "ORBIS Operations", facility: "Plant A: Berlin" },
@@ -83,7 +84,7 @@ export function Header() {
         <div ref={switcherRef} className="relative z-40 hidden sm:block">
           <button
             onClick={() => setWorkspaceOpen(!workspaceOpen)}
-            className="flex items-center gap-2 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-left text-xs transition hover:bg-[var(--surface-muted)] focus:outline-none"
+            className="flex h-10 items-center gap-2 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 text-left text-xs transition hover:bg-[var(--surface-muted)] focus:outline-none"
           >
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <div className="min-w-0">
@@ -96,7 +97,7 @@ export function Header() {
           </button>
           
           {workspaceOpen && (
-            <div className="absolute left-0 mt-1 w-56 rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow)]">
+            <div className="absolute left-0 mt-1.5 w-56 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-[var(--shadow)]">
               <div className="px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
                 Switch Facility
               </div>
@@ -176,33 +177,8 @@ export function Header() {
           {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
 
-        {/* User Card */}
-        <div className="flex items-center gap-3 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-          <div 
-            onClick={() => router.push("/profile")}
-            className="h-8 w-8 rounded-full bg-[var(--primary-soft)] border border-[var(--border)] flex items-center justify-center font-bold text-xs text-[var(--primary)] cursor-pointer hover:opacity-85 transition"
-          >
-            {user?.username?.substring(0, 2).toUpperCase()}
-          </div>
-          <div className="hidden min-w-0 flex-col lg:flex">
-            <div className="truncate text-xs font-bold leading-none text-[var(--foreground)]">{user?.username}</div>
-            <div className="truncate text-[10px] text-[var(--muted)] leading-none mt-1">{user?.role}</div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-[var(--muted)] hover:text-[var(--danger)]"
-            aria-label="Sign out"
-            title="Sign out"
-            onClick={() => {
-              logout();
-              router.replace("/login");
-              toast.success("Successfully logged out.");
-            }}
-          >
-            <BoxArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* User Card Dropdown */}
+        <ProfileDropdown />
       </div>
     </header>
   );

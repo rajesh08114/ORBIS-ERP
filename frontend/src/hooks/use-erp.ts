@@ -2,34 +2,42 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { erpService } from "@/services/erp-service";
-import { useErpStore } from "@/stores/erp-store"; // fallback or for kpis if needed
-import type { Order, Status } from "@/types/erp";
+import { useAuthStore } from "@/stores/auth-store";
+import type { Order, Status, WorkOrder } from "@/types/erp";
 
 export function useDashboard() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: erpService.dashboard,
+    enabled: !!user,
   });
 }
 
 export function useProducts() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["products"],
     queryFn: () => erpService.products().then((res: any) => res.results || res),
+    enabled: !!user,
   });
 }
 
 export function useVendors() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["vendors"],
     queryFn: () => erpService.vendors().then((res: any) => res.results || res),
+    enabled: !!user,
   });
 }
 
 export function useCustomers() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["customers"],
     queryFn: () => erpService.customers().then((res: any) => res.results || res),
+    enabled: !!user,
   });
 }
 
@@ -51,47 +59,85 @@ const mapOrder = (order: any, type: "sales" | "purchase"): Order => {
     value,
     due: order.created_at ? new Date(order.created_at).toLocaleDateString() : "",
     status: statusStr as Status,
-    risk: "Low"
+    risk: "Low",
+    scheduled_date: order.scheduled_date
   };
 };
 
 export function useSalesOrders() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["salesOrders"],
     queryFn: () => erpService.salesOrders().then((res: any) => {
       const results = res.results || res;
       return Array.isArray(results) ? results.map((o) => mapOrder(o, "sales")) : [];
     }),
+    enabled: !!user,
   });
 }
 
 export function usePurchaseOrders() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["purchaseOrders"],
     queryFn: () => erpService.purchaseOrders().then((res: any) => {
       const results = res.results || res;
       return Array.isArray(results) ? results.map((o) => mapOrder(o, "purchase")) : [];
     }),
+    enabled: !!user,
   });
 }
 
+const mapWorkOrder = (wo: any): WorkOrder => {
+  let stage = "Draft";
+  let progress = 0;
+  if (wo.status === "ready") {
+    stage = "Assembly";
+    progress = 25;
+  } else if (wo.status === "in_progress") {
+    stage = "Painting";
+    progress = 50;
+  } else if (wo.status === "done") {
+    stage = "Completed";
+    progress = 100;
+  }
+  
+  return {
+    id: wo.id?.toString() || "",
+    product: wo.product_name || "Titanium Housing 1",
+    workCenter: wo.work_center_name || "CNC Station A",
+    stage,
+    progress,
+    priority: "Medium",
+  };
+};
+
 export function useWorkOrders() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["workOrders"],
-    queryFn: () => erpService.workOrders().then((res: any) => res.results || res),
+    queryFn: () => erpService.workOrders().then((res: any) => {
+      const results = res.results || res;
+      return Array.isArray(results) ? results.map(mapWorkOrder) : [];
+    }),
+    enabled: !!user,
   });
 }
 
 export function useInventoryTransactions() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["inventoryTransactions"],
     queryFn: () => erpService.inventoryTransactions().then((res: any) => res.results || res),
+    enabled: !!user,
   });
 }
 
 export function useAuditEvents() {
+  const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["auditEvents"],
     queryFn: () => erpService.auditEvents().then((res: any) => res.results || res),
+    enabled: !!user,
   });
 }

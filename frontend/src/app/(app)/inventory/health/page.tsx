@@ -14,10 +14,10 @@ export default function InventoryHealthPage() {
   if (isLoading || !data) return <LoadingState />;
 
   // Compute stats
-  const totalValuation = data.reduce((sum, item) => sum + (item.onHand * item.unitCost), 0);
-  const criticalItems = data.filter((item) => item.status === "Critical");
-  const lowStockItems = data.filter((item) => item.onHand < 150 && item.status !== "Completed");
-  const healthyItemsCount = data.filter((item) => item.status === "Healthy" || item.status === "Completed").length;
+  const totalValuation = data.reduce((sum: number, item: any) => sum + (item.onHand * item.unitCost), 0);
+  const criticalItems = data.filter((item: any) => item.status === "Critical");
+  const lowStockItems = data.filter((item: any) => item.onHand < 150 && item.status !== "Completed");
+  const healthyItemsCount = data.filter((item: any) => item.status === "Healthy" || item.status === "Completed").length;
 
   return (
     <>
@@ -44,7 +44,7 @@ export default function InventoryHealthPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {criticalItems.slice(0, 5).map((item) => (
+              {criticalItems.slice(0, 5).map((item: any) => (
                 <div key={item.id} className="flex justify-between items-center p-3 rounded-[8px] border border-red-500/20 bg-red-500/5">
                   <div>
                     <span className="text-sm font-bold text-[var(--foreground)] block">{item.name}</span>
@@ -71,7 +71,7 @@ export default function InventoryHealthPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.filter((item) => item.onHand > 800).slice(0, 5).map((item) => (
+              {data.filter((item: any) => item.onHand > 800).slice(0, 5).map((item: any) => (
                 <div key={item.id} className="flex justify-between items-center p-3 rounded-[8px] border border-[var(--border)] bg-[var(--surface-muted)]">
                   <div>
                     <span className="text-sm font-bold text-[var(--foreground)] block">{item.name}</span>

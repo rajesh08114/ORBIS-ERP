@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from apps.audit.api import AuditEntryViewSet, AuditLogViewSet
-from apps.common.auth_api import LoginAPIView, LogoutAPIView, MeAPIView, RegisterAPIView
+from apps.common.auth_api import LoginAPIView, LogoutAPIView, MeAPIView, RegisterAPIView, ChangePasswordAPIView
 from apps.common.api_views import DashboardAPIView
 from apps.common.backend_api import (
     AuditEntityAPIView,
@@ -59,6 +59,7 @@ urlpatterns = [
     path("auth/register/", RegisterAPIView.as_view(), name="api-register"),
     path("auth/me/", MeAPIView.as_view(), name="api-me"),
     path("auth/logout/", LogoutAPIView.as_view(), name="api-logout"),
+    path("auth/change-password/", ChangePasswordAPIView.as_view(), name="api-change-password"),
     path("dashboard/", DashboardAPIView.as_view(), name="api-dashboard"),
     path("resources/", ResourceIndexAPIView.as_view(), name="api-resource-index"),
     path("forms/<slug:resource>/", EntityFormMetadataAPIView.as_view(), name="api-form-metadata"),

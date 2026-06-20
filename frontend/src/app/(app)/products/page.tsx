@@ -16,8 +16,8 @@ export default function ProductsPage() {
       <PageHeader eyebrow="Product Master" title="Products" description="Search, filter, create, edit, and monitor product master data with inventory visibility." action="Create Product" />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Products" value={data.length.toString()} trend="500+ loaded" icon={PackageSearch} tone="info" />
-        <MetricCard label="On Hand Units" value={data.reduce((sum, item) => sum + item.onHand, 0).toLocaleString()} trend="Across all warehouses" icon={Warehouse} tone="success" />
-        <MetricCard label="Critical SKUs" value={data.filter((item) => item.status === "Critical").length.toString()} trend="Reorder review" icon={ShieldAlert} tone="danger" />
+        <MetricCard label="On Hand Units" value={data.reduce((sum: number, item: any) => sum + item.onHand, 0).toLocaleString()} trend="Across all warehouses" icon={Warehouse} tone="success" />
+        <MetricCard label="Critical SKUs" value={data.filter((item: any) => item.status === "Critical").length.toString()} trend="Reorder review" icon={ShieldAlert} tone="danger" />
         <MetricCard label="New This Week" value="18" trend="Approved" icon={Plus} tone="primary" />
       </div>
       <div className="mt-4">

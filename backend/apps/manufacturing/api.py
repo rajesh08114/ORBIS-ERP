@@ -61,6 +61,10 @@ class ManufacturingOrderLineSerializer(serializers.ModelSerializer):
 
 
 class WorkOrderSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="manufacturing_order.finished_product.name", read_only=True, default="Titanium Housing 1")
+    work_center_name = serializers.CharField(source="work_center.name", read_only=True, default="CNC Station A")
+    operation_name = serializers.CharField(source="operation.name", read_only=True, default="Assembly")
+
     class Meta:
         model = WorkOrder
         fields = [
@@ -72,8 +76,11 @@ class WorkOrderSerializer(serializers.ModelSerializer):
             "sequence",
             "status",
             "notes",
+            "product_name",
+            "work_center_name",
+            "operation_name",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "product_name", "work_center_name", "operation_name"]
 
 
 class ManufacturingOrderSerializer(serializers.ModelSerializer):

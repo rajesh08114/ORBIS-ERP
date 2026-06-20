@@ -26,7 +26,7 @@ export default function InventoryTimelinePage() {
 
       <div className="max-w-3xl mx-auto mt-6">
         <div className="relative border-l-2 border-[var(--border)] ml-4 pl-8 space-y-8 py-2">
-          {timelineItems.map((item) => {
+          {timelineItems.map((item: any) => {
             const isPositive = item.quantity > 0;
             const Icon = item.type === "Receipt" ? ArrowDown : item.type === "Issue" ? ArrowUp : ArrowLeftRight;
             const iconColor = item.type === "Receipt" ? "text-emerald-500 bg-emerald-500/10" : item.type === "Issue" ? "text-rose-500 bg-rose-500/10" : "text-amber-500 bg-amber-500/10";

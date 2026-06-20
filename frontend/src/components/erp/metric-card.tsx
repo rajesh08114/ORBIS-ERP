@@ -1,22 +1,25 @@
 import type { LucideIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 export function MetricCard({
   label,
   value,
   trend,
   icon: Icon,
-  tone = "primary"
+  tone = "primary",
+  href
 }: {
   label: string;
   value: string;
   trend: string;
   icon: LucideIcon;
   tone?: "primary" | "success" | "warning" | "danger" | "info";
+  href?: string;
 }) {
-  return (
-    <Card className="p-4">
+  const cardContent = (
+    <Card className={`p-4 transition-all duration-200 ${href ? 'cursor-pointer hover:border-[var(--primary)] hover:shadow-md hover:scale-[1.02] active:scale-[0.98]' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-[var(--muted)]">{label}</div>
@@ -31,4 +34,15 @@ export function MetricCard({
       </Badge>
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block no-underline select-none">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }
+
