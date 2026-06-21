@@ -16,7 +16,7 @@ export default function PurchaseReceiptPage() {
             </div>
           </div>
           <div className="space-y-3">
-            {["Titanium Housing", "Optical Sensor Array", "Packaging Inserts"].map((item) => (
+            {["Solid Oak Table Top", "Leather Cushion", "Assembly Fasteners"].map((item) => (
               <div key={item} className="flex items-center justify-between rounded-[8px] border border-[var(--border)] p-4">
                 <div>
                   <div className="font-semibold">{item}</div>

@@ -5,11 +5,20 @@ export type Product = {
   sku: string;
   name: string;
   category: string;
+  image?: string | null;
   onHand: number;
   reserved: number;
   incoming: number;
   unitCost: number;
   status: Status;
+  salesPrice?: number;
+  costPrice?: number;
+  freeToUse?: number;
+  procureOnDemand?: boolean;
+  procurementType?: "purchase" | "manufacture";
+  vendor_id?: string;
+  bom_id?: string;
+  vendor_name?: string;
 };
 
 export type Customer = {
@@ -39,6 +48,10 @@ export type Order = {
   status: Status;
   risk: "Low" | "Medium" | "High";
   scheduled_date?: string;
+  finishedProduct?: string;
+  quantity?: number;
+  unit?: string;
+  componentStatus?: string;
 };
 
 export type WorkOrder = {
@@ -66,4 +79,23 @@ export type AuditEvent = {
   severity: "Info" | "Warning" | "Critical";
   action: string;
   timestamp: string;
+};
+
+export type BomLine = {
+  id?: number;
+  component: number;
+  quantity_required: number;
+  operation?: number;
+  sequence?: number;
+};
+
+export type Bom = {
+  id: number;
+  code: string;
+  finished_product: number;
+  quantity: number;
+  version: number;
+  is_active: boolean;
+  notes: string;
+  lines: BomLine[];
 };

@@ -104,11 +104,40 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
         "cancel": [SALES_CONFIRM],
     }
 
+    def perform_create(self, serializer):
+        from apps.audit.services import log_audit_event
+        instance = serializer.save(salesperson=self.request.user)
+        log_audit_event(
+            entity_name="SalesOrder",
+            entity_id=str(instance.pk),
+            action="created",
+            details=serializer.data,
+        )
+
+    def perform_update(self, serializer):
+        from apps.audit.services import audit_update
+        instance = self.get_object()
+        audit_update(instance, serializer, "SalesOrder")
+
+    def perform_destroy(self, instance):
+        from apps.audit.services import log_audit_event
+        pk = instance.pk
+        ref = instance.reference
+        instance.delete()
+        log_audit_event(
+            entity_name="SalesOrder",
+            entity_id=str(pk),
+            action="deleted",
+            details={"reference": ref},
+        )
+
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         order = self.get_object()
-        confirm_sales_order(order)
-        return Response(self.get_serializer(order).data)
+        order, procurements = confirm_sales_order(order)
+        data = self.get_serializer(order).data
+        data["procurements"] = procurements
+        return Response(data)
 
     @action(detail=True, methods=["post"])
     def deliver(self, request, pk=None):

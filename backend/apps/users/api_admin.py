@@ -108,8 +108,26 @@ class UserAdminViewSet(viewsets.ModelViewSet):
         # Exclude the current user to prevent self-lockouts
         return super().get_queryset().exclude(id=self.request.user.id)
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        log_audit_event(
+            entity_name="User",
+            entity_id=str(user.id),
+            action="created",
+            details={"username": user.username, "email": user.email},
+        )
+
     def perform_update(self, serializer):
         audit_update(self.get_object(), serializer, "User")
+
+    def perform_destroy(self, instance):
+        log_audit_event(
+            entity_name="User",
+            entity_id=str(instance.id),
+            action="deleted",
+            details={"username": instance.username},
+        )
+        instance.delete()
 
     @action(detail=True, methods=["post"])
     def toggle_status(self, request, pk=None):

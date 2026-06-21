@@ -1,21 +1,33 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatNumber } from "@/lib/utils";
-import { statusTone } from "@/lib/status";
 import type { Product } from "@/types/erp";
+import Link from "next/link";
 
 const columns: ColumnDef<Product>[] = [
-  { accessorKey: "sku", header: "SKU" },
-  { accessorKey: "name", header: "Product" },
-  { accessorKey: "category", header: "Category" },
-  { accessorKey: "onHand", header: "On Hand", cell: ({ row }) => formatNumber(row.original.onHand) },
-  { accessorKey: "reserved", header: "Reserved", cell: ({ row }) => formatNumber(row.original.reserved) },
-  { accessorKey: "incoming", header: "Incoming", cell: ({ row }) => formatNumber(row.original.incoming) },
-  { accessorKey: "unitCost", header: "Unit Cost", cell: ({ row }) => formatCurrency(row.original.unitCost) },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => <Badge tone={statusTone(row.original.status)}>{row.original.status}</Badge> }
+  { 
+    accessorKey: "sku", 
+    header: "Reference",
+    cell: ({ row }) => (
+      <Link href={`/products/${row.original.id}`} className="font-bold text-[var(--primary)] hover:underline">
+        {row.original.sku || "-"}
+      </Link>
+    )
+  },
+  { 
+    accessorKey: "name", 
+    header: "Product",
+    cell: ({ row }) => (
+      <Link href={`/products/${row.original.id}`} className="font-medium hover:underline">
+        {row.original.name}
+      </Link>
+    )
+  },
+  { accessorKey: "salesPrice", header: "Sales Price", cell: ({ row }) => formatCurrency(row.original.salesPrice || 0) },
+  { accessorKey: "costPrice", header: "Cost Price", cell: ({ row }) => formatCurrency(row.original.costPrice || 0) },
+  { accessorKey: "onHand", header: "On Hand Qty", cell: ({ row }) => formatNumber(row.original.onHand || 0) }
 ];
 
 export function ProductTable({ products }: { products: Product[] }) {

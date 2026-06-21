@@ -4,6 +4,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,6 +31,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: customers } = useCustomers();
   const { data: products } = useProducts();
 
@@ -56,6 +58,7 @@ export default function NewSalesOrderPage() {
       const orderRes = await apiClient<any>("sales-orders/", {
         method: "POST",
         body: JSON.stringify({
+          reference: `SO-${Date.now()}`,
           customer: parseInt(data.customer, 10),
           notes: data.notes
         })
@@ -75,9 +78,14 @@ export default function NewSalesOrderPage() {
       ));
 
       toast.success(`Sales order ${orderRes.reference || orderRes.id} created successfully.`);
+      queryClient.invalidateQueries({ queryKey: ["salesOrders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       router.push("/sales/orders");
     } catch (error: any) {
-      toast.error(`Failed to create sales order: ${error.message}`);
+      const errorMessage = error.data && typeof error.data === 'object' && Object.keys(error.data).length > 0 
+        ? error.data[Object.keys(error.data)[0]][0] 
+        : error.message;
+      toast.error(`Failed to create sales order: ${errorMessage}`);
     }
   };
 
@@ -93,19 +101,15 @@ export default function NewSalesOrderPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="grid gap-2">
               <span className="text-sm font-semibold text-[var(--foreground)]">Customer</span>
-              <Controller
-                name="customer"
-                control={control}
-                render={({ field }) => (
-                  <PartnerCombobox
-                    value={field.value}
-                    onChange={(id) => field.onChange(id)}
-                    options={(customers || []).map((c: any) => ({ id: c.id, name: c.name || `Customer #${c.id}`, code: c.customer_code }))}
-                    placeholder="Type customer name..."
-                    className={errors.customer ? "border-[var(--danger)] rounded-[8px]" : ""}
-                  />
-                )}
-              />
+              <Select
+                {...register("customer")}
+                className={errors.customer ? "border-[var(--danger)]" : ""}
+              >
+                <option value="">Select a customer...</option>
+                {customers?.map((c: any) => (
+                  <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                ))}
+              </Select>
               {errors.customer && (
                 <span className="text-xs text-[var(--danger)]">{errors.customer.message}</span>
               )}

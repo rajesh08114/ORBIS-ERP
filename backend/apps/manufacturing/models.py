@@ -28,6 +28,7 @@ class BillOfMaterial(models.Model):
         on_delete=models.PROTECT,
         related_name="boms",
     )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=1.00)
     version = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=True)
     notes = models.TextField(blank=True)

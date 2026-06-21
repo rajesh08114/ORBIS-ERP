@@ -15,8 +15,8 @@ export default function ProcurementRecommendationsPage() {
         <MetricCard label="AI Confidence" value="94%" trend="High" icon={Bot} tone="info" />
       </div>
       <Card className="mt-4 p-5">
-        <h3 className="text-xl font-bold">Titanium Alloy Housing - Unit A4</h3>
-        <p className="mt-2 text-sm text-[var(--muted)]">Recommend split sourcing across Titanium Corp and Apex Materials to reduce lead-time risk while preserving target margin.</p>
+        <h3 className="text-xl font-bold">Solid Oak Table Top - Unit A4</h3>
+        <p className="mt-2 text-sm text-[var(--muted)]">Recommend split sourcing across Timberland Woods and Apex Materials to reduce lead-time risk while preserving target margin.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Button>Generate PO</Button>
           <Button variant="secondary">Compare Vendors</Button>

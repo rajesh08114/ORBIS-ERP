@@ -8,6 +8,8 @@ import { MetricCard } from "@/components/erp/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Boxes, ShieldAlert, BarChart3, TrendingUp } from "@/components/icons";
 
+import { toast } from "sonner";
+
 export default function InventoryHealthPage() {
   const { data, isLoading } = useProducts();
 
@@ -26,6 +28,7 @@ export default function InventoryHealthPage() {
         title="Inventory Health Diagnostics" 
         description="Predictive signals monitoring component shortages, holding costs, slow-moving parts, and valuation levels."
         action="Run Simulation"
+        onAction={() => toast.info("Inventory simulation initiated... calculating predictions.")}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

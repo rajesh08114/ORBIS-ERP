@@ -50,7 +50,7 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
 
   const token = getAuthToken();
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    ...(!(customOptions.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...customHeaders,
   };

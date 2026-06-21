@@ -14,7 +14,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (hydrated && user) {
       refreshUser().catch(() => {});
     }
-  }, [pathname, hydrated]);
+  }, [pathname, hydrated, refreshUser]);
 
   useEffect(() => {
     if (!hydrated) return;

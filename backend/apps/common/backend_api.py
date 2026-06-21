@@ -12,7 +12,6 @@ from rest_framework.views import APIView
 
 from apps.audit.models import AuditEntry, AuditLog
 from apps.common.backend_registry import build_export_rows, build_form_metadata, list_resource_keys
-from apps.common.cloudinary import upload_avatar_to_cloudinary
 from apps.common.profile_services import get_unified_profile, set_avatar, update_unified_profile
 from apps.common.reporting import build_csv_bytes, build_pdf_bytes, build_xlsx_bytes
 from apps.common.api import ERPActionPermission
@@ -110,16 +109,28 @@ class UnifiedAvatarUploadAPIView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
+        import os
+        from django.core.files.storage import default_storage
+
         avatar_file = request.FILES.get("avatar") or request.FILES.get("file")
         if avatar_file is None:
             return Response({"detail": "An avatar file is required."}, status=status.HTTP_400_BAD_REQUEST)
-        uploaded = upload_avatar_to_cloudinary(avatar_file, folder=f"mini-erp/avatars/{request.user.id}")
+        
+        file_ext = os.path.splitext(avatar_file.name)[1]
+        file_name = f"avatars/{request.user.id}{file_ext}"
+
+        if default_storage.exists(file_name):
+            default_storage.delete(file_name)
+
+        saved_path = default_storage.save(file_name, avatar_file)
+        avatar_url = request.build_absolute_uri(default_storage.url(saved_path))
+
         profile = set_avatar(
             request.user,
-            avatar_url=uploaded.get("secure_url", ""),
-            avatar_public_id=uploaded.get("public_id", ""),
+            avatar_url=avatar_url,
+            avatar_public_id="",
         )
-        return Response({"success": True, "upload": uploaded, "profile": profile}, status=status.HTTP_201_CREATED)
+        return Response({"success": True, "upload": {"secure_url": avatar_url}, "profile": profile}, status=status.HTTP_201_CREATED)
 
 
 class AuditSummaryAPIView(APIView):

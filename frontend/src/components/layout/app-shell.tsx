@@ -17,8 +17,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {!isDashboard && <Header />}
         <main className="mx-auto w-full max-w-[1440px] px-4 py-5 pb-28 lg:px-6 lg:pb-8">{children}</main>
       </div>
-      <MobileNav />
-      <MobileDrawer />
       <CommandPalette />
     </div>
   );

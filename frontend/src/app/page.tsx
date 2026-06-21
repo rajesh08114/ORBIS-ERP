@@ -29,47 +29,47 @@ import { useAuthStore } from "@/stores/auth-store";
 const slides = [
   {
     title: "Executive Command Center",
-    description: "One operating picture for revenue, margins, fulfillment capacity, and supplier risk.",
+    description: "One operating picture for revenue, margins, and fulfillment capacity across all furniture lines.",
     image: "/product/executive.png",
-    metric: "$18.4M",
-    label: "Quarterly revenue",
+    metric: "$1.4M",
+    label: "Monthly revenue",
     trend: "+12.8% MoM",
     icon: Activity,
   },
   {
-    title: "Digital Twin Operations Hub",
-    description: "Trace every raw material, production event, and distribution stage as it happens.",
+    title: "Inventory & Stock Tracking",
+    description: "Real-time visibility into every wooden leg, top, and screw as it moves through the warehouse.",
     image: "/product/digital-twin.png",
     metric: "98.4%",
-    label: "System throughput",
-    trend: "Real-time stream",
+    label: "Stock accuracy",
+    trend: "Real-time sync",
     icon: Boxes,
   },
   {
-    title: "Inventory Control Room",
-    description: "Balance dynamic service levels with smart capital locks using predictive signals.",
+    title: "Procurement Automation",
+    description: "Automatically trigger purchase orders for raw materials when stock falls below thresholds.",
     image: "/product/inventory.png",
     metric: "4.2x",
     label: "Inventory turns",
-    trend: "Optimal health",
+    trend: "Zero shortages",
     icon: BarChart3,
   },
   {
-    title: "Manufacturing Command",
-    description: "Coordinate capacity queues, routing steps, BOM rollups, and workstation speeds.",
+    title: "Manufacturing Tracking",
+    description: "Convert Bill of Materials into active work orders, tracking assembly, painting, and packing.",
     image: "/product/manufacturing.png",
     metric: "87.6%",
-    label: "OEE efficiency",
+    label: "Production efficiency",
     trend: "+4.1% target",
     icon: Factory,
   },
   {
-    title: "Procurement Engine",
-    description: "Convert stock deficit signals into pre-negotiated, supplier-ready receipts.",
+    title: "Sales & Delivery",
+    description: "Manage customer orders, reserve stock dynamically, and ensure on-time delivery.",
     image: "/product/procurement.png",
-    metric: "$284K",
-    label: "Cost savings identified",
-    trend: "32 actions active",
+    metric: "14 Days",
+    label: "Avg lead time",
+    trend: "MTO & MTS flows",
     icon: Truck,
   }
 ] as const;
@@ -77,54 +77,54 @@ const slides = [
 const workflows = [
   {
     step: "01",
-    department: "Sales & Demand",
-    title: "Commercial Order Received",
-    description: "Customer orders stream into ORBIS, initiating margins and delivery promise calculations.",
+    department: "Sales Module",
+    title: "Order Received",
+    description: "Customer orders stream into the system, initiating stock availability checks.",
     kpi: "SO-2026-0042",
     label: "Sales Order",
     color: "from-blue-500 to-indigo-500",
   },
   {
     step: "02",
-    department: "Inventory Check",
-    title: "Real-Time Stock Audit",
-    description: "Dynamic allocation engine checks warehouse stock, locking items and verifying availability.",
-    kpi: "WH-A1 / WH-B2",
-    label: "Stock Location",
+    department: "Inventory Module",
+    title: "Stock Reservation",
+    description: "Dynamic allocation engine checks warehouse stock, reserving finished goods if Make-to-Stock.",
+    kpi: "MTS / MTO Check",
+    label: "Flow Type",
     color: "from-teal-500 to-emerald-500",
   },
   {
     step: "03",
-    department: "Procurement Run",
-    title: "Smart Supplier Procurement",
-    description: "If supply levels drop, recommendations trigger PO generation with exact delivery schedules.",
+    department: "Purchase Module",
+    title: "Procurement Trigger",
+    description: "If raw materials (like Wood, Screws) drop below threshold, purchase orders are automatically created.",
     kpi: "PO-2026-0812",
     label: "Purchase Order",
     color: "from-amber-500 to-orange-500",
   },
   {
     step: "04",
-    department: "Manufacturing Queue",
-    title: "Work Order Routing",
-    description: "BOM definitions expand, launching CNC stations and work orders to assembly queues.",
-    kpi: "WO-8842 Active",
+    department: "Manufacturing Module",
+    title: "Work Order Execution",
+    description: "BoM definitions expand into manufacturing orders. Assembly, painting, and packing steps are tracked.",
+    kpi: "MO-8842 Active",
     label: "Manufacturing Order",
     color: "from-purple-500 to-pink-500",
   },
   {
     step: "05",
-    department: "Quality Assurance",
-    title: "Final QC Validation",
-    description: "Testing protocols verify structural compliance before packing and shipping labels emit.",
-    kpi: "100% QA Passed",
-    label: "Compliance Score",
+    department: "Fulfillment",
+    title: "Product Delivered",
+    description: "Finished goods are added to stock, then dispatched to the customer. Stock ledger updates instantly.",
+    kpi: "100% Delivered",
+    label: "Fulfillment Status",
     color: "from-emerald-500 to-green-600",
   },
   {
     step: "06",
-    department: "Fulfillment & Audit",
-    title: "Dispatched & Logged",
-    description: "Shipments release while every change, approval, and transaction write logs to the ledger.",
+    department: "System Audit",
+    title: "End-to-End Traceability",
+    description: "Every order, purchase, manufacturing task, and inventory movement is permanently logged.",
     kpi: "AUD-1049 Logged",
     label: "Audit Event",
     color: "from-slate-600 to-slate-800",
@@ -165,15 +165,7 @@ export default function HomePage() {
             <OrbisLogo />
           </div>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[var(--muted)]">
-            <a href="#platform" className="hover:text-[var(--foreground)] transition">Modules</a>
-            <a href="#twin" className="hover:text-[var(--foreground)] transition">Digital Twin</a>
-            <a href="#workflow" className="hover:text-[var(--foreground)] transition">Workflow</a>
-            <a href="#analytics" className="hover:text-[var(--foreground)] transition">Analytics</a>
-            <a href="#access" className="hover:text-[var(--foreground)] transition">Security</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
+          {/* Header Navigation removed per request */}          <div className="flex items-center gap-4">
             <button
               className="focus-ring grid h-9 w-9 place-items-center rounded-[8px] border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-muted)] transition"
               aria-label="Toggle theme"
@@ -209,19 +201,19 @@ export default function HomePage() {
           {/* Left: Headline, Call-to-Actions & Metrics */}
           <div className="lg:col-span-5 space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--primary)] shadow-sm">
-              <Activity className="h-3.5 w-3.5 animate-pulse" /> Connected ERP for Modern Manufacturing
+              <Activity className="h-3.5 w-3.5 animate-pulse" /> Shiv Furniture Works
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1]">
-              Intelligent ERP for <br />
+              Mini ERP: <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]">
-                Modern Manufacturers
+                From Demand to Delivery
               </span>
             </h1>
 
             <p className="text-sm leading-relaxed text-[var(--muted)] max-w-md">
-              From Customer Demand to Finished Delivery. <br />
-              Automate. Track. Predict. Deliver.
+              Ditch the disconnected spreadsheets. <br />
+              Digitally manage your complete business flow from Sales and Manufacturing to Procurement and Inventory.
             </p>
 
             <div className="flex flex-wrap gap-3 pt-1">
@@ -260,24 +252,7 @@ export default function HomePage() {
 
           {/* Right: Embedded Overlapping Product Carousel */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Slide Navigation Tabs */}
-            <div className="flex flex-wrap gap-1.5 justify-start">
-              {slides.map((item, index) => {
-                const activeSlide = index === active;
-                return (
-                  <button
-                    key={item.title}
-                    onClick={() => setActive(index)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition duration-200 cursor-pointer ${activeSlide
-                        ? "bg-[var(--primary)] text-white dark:text-[#0d0d0f] border-[var(--primary)] shadow-sm"
-                        : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)] hover:bg-[var(--surface-muted)]"
-                      }`}
-                  >
-                    {item.title}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Slide Navigation Tabs removed per request */}
 
             {/* Stacked 3D overlapping mockup panels */}
             <div className="relative w-full aspect-[16/10] select-none mt-4 lg:mt-0">
@@ -295,9 +270,9 @@ export default function HomePage() {
                     <span className="h-2.5 w-2.5 rounded-full bg-[#ff7b72]/85" />
                     <span className="h-2.5 w-2.5 rounded-full bg-[#d7b45b]/85" />
                     <span className="h-2.5 w-2.5 rounded-full bg-[#62b77b]/85" />
-                    <span className="ml-3 text-[10px] font-bold font-mono uppercase tracking-wider text-slate-400">
-                      ORBIS Workspace Control Panel
-                    </span>
+                    <div className="absolute top-0 left-4 px-2 -mt-3 bg-[var(--surface-muted)] text-[10px] font-bold tracking-widest text-[var(--muted)] uppercase">
+                      Furniture ERP Workspace Control Panel
+                    </div>
                   </div>
                   {/* Arrow navigation shortcut buttons */}
                   <div className="flex items-center gap-1">
@@ -373,7 +348,7 @@ export default function HomePage() {
               See your entire business as a living digital system.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed">
-              Trace orders seamlessly from procurement, raw stock delivery, machine assembly queues, final balancing tests, to outbound shipment logs. Every node is responsive, interactive, and connected.
+              Trace orders seamlessly from procurement, raw stock delivery (wood, screws, fabric), assembly queues, final balancing tests, to outbound shipment logs. Every node is responsive, interactive, and connected.
             </p>
             <div className="space-y-4 pt-2">
               {[
@@ -415,7 +390,7 @@ export default function HomePage() {
                   <div className="text-[9px] text-emerald-500 mt-0.5">Optimal levels</div>
                 </div>
                 <div className="p-3 rounded-[10px] border border-purple-500/20 bg-purple-500/5 text-center">
-                  <div className="text-[10px] font-bold uppercase text-[var(--muted)]">CNC Assembly</div>
+                  <div className="text-[10px] font-bold uppercase text-[var(--muted)]">Wood Workshop</div>
                   <div className="text-sm font-extrabold text-[var(--foreground)] mt-1">87% Load</div>
                   <div className="text-[9px] text-purple-400 mt-0.5">High efficiency</div>
                 </div>
@@ -456,7 +431,7 @@ export default function HomePage() {
       <section className="border-b border-[var(--border)] py-24 bg-[var(--surface)]">
         <div className="mx-auto max-w-[1440px] px-5 lg:px-8 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 relative aspect-[16/10] w-full rounded-[16px] border border-[var(--border)] bg-[var(--surface-muted)] overflow-hidden shadow-md lg:order-2">
-            <Image src="/product/manufacturing.png" alt="Manufacturing Command Center" fill className="object-cover object-top" />
+            <Image src="/product/manufacturing.png?v=2" alt="Manufacturing Command Center" fill className="object-cover object-top" />
           </div>
 
           <div className="lg:col-span-6 space-y-6 lg:order-1">
@@ -465,7 +440,7 @@ export default function HomePage() {
               Coordinate work centers, routings, and yields.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed">
-              Define detailed Bill of Materials (BOM) trees, link machining operations to CNC stations, schedule personnel workloads, and evaluate line bottlenecks dynamically through integrated kanbans.
+              Define detailed Bill of Materials (BoM) trees (e.g. Wooden Table = 4 Legs + 1 Top + 12 Screws), link machining operations to work centers, schedule personnel workloads, and evaluate line bottlenecks dynamically.
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-[12px] bg-[var(--surface-muted)] border border-[var(--border)]">
@@ -492,7 +467,7 @@ export default function HomePage() {
       <section className="border-b border-[var(--border)] py-24 bg-[var(--background)]">
         <div className="mx-auto max-w-[1440px] px-5 lg:px-8 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 relative aspect-[16/10] w-full rounded-[16px] border border-[var(--border)] bg-[var(--surface-muted)] overflow-hidden shadow-md">
-            <Image src="/product/inventory.png" alt="Inventory Intelligence Dashboard" fill className="object-cover object-top" />
+            <Image src="/product/inventory.png?v=2" alt="Inventory Intelligence Dashboard" fill className="object-cover object-top" />
           </div>
 
           <div className="lg:col-span-6 space-y-6">
@@ -530,7 +505,7 @@ export default function HomePage() {
       <section id="analytics" className="border-b border-[var(--border)] py-24 bg-[var(--surface)]">
         <div className="mx-auto max-w-[1440px] px-5 lg:px-8 grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 relative aspect-[16/10] w-full rounded-[16px] border border-[var(--border)] bg-[var(--surface-muted)] overflow-hidden shadow-md lg:order-2">
-            <Image src="/product/executive.png" alt="Executive Intelligence Dashboard" fill className="object-cover object-top" />
+            <Image src="/product/executive.png?v=2" alt="Executive Intelligence Dashboard" fill className="object-cover object-top" />
           </div>
 
           <div className="lg:col-span-6 space-y-6 lg:order-1">
@@ -652,7 +627,7 @@ export default function HomePage() {
 
           {/* Graphical Mockup of Audit Trail */}
           <div className="relative aspect-[16/10] w-full rounded-[16px] border border-[var(--border)] bg-[var(--surface-muted)] overflow-hidden shadow-md">
-            <Image src="/product/audit.png" alt="Audit logs security panel" fill className="object-cover object-top" />
+            <Image src="/product/audit.png?v=2" alt="Audit logs security panel" fill className="object-cover object-top" />
           </div>
         </div>
       </section>
@@ -668,21 +643,21 @@ export default function HomePage() {
           <div className="mt-14 grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "ORBIS gave our executive team one view of system throughput without taking control away from individual shop floor stations.",
+                quote: "This ERP gave our executive team one view of system throughput without taking control away from individual shop floor stations.",
                 author: "Elena Rossi",
-                role: "COO, Northstar Components",
+                role: "COO, Prime Wood Components",
                 avatar: "ER"
               },
               {
                 quote: "The live operations graph changed our weekly pipeline syncs from troubleshooting data into actual forward-planning.",
                 author: "Marcus Lee",
-                role: "VP Manufacturing, Arcwell Systems",
+                role: "VP Manufacturing, Arcwell Furniture",
                 avatar: "ML"
               },
               {
                 quote: "We reduced transport expedites by 18% because stock rooms and purchase engines are automatically synced.",
                 author: "Anika Patel",
-                role: "Supply Chain Director, Meridian Works",
+                role: "Supply Chain Director, Meridian Living",
                 avatar: "AP"
               }
             ].map((t) => (
@@ -706,7 +681,7 @@ export default function HomePage() {
       </section>
 
       {/* 11. CTA Section */}
-      <section className="bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] py-20 text-white relative overflow-hidden">
+      <section className="bg-gradient-to-tr from-[#57344f] to-[#7c5071] py-20 text-white relative overflow-hidden dark:from-[#14351f] dark:to-[#12b76a]">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[80px]" />
         <div className="mx-auto max-w-[1240px] px-5 lg:px-8 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>
@@ -714,10 +689,10 @@ export default function HomePage() {
               Connect your industrial operations today.
             </h2>
             <p className="text-white/70 mt-2 max-w-xl">
-              Access the role-based ORBIS demo sandbox. Verify BOM rollups, cycle counts, work orders, and executive views immediately.
+              Access the role-based Shiv Furniture Works demo sandbox. Verify BOM rollups, cycle counts, work orders, and executive views immediately.
             </p>
           </div>
-          <Link className="inline-flex shrink-0 items-center gap-2 rounded-[8px] bg-white px-6 py-3.5 font-bold text-[var(--primary)] shadow-xl hover:bg-slate-50 transition" href={showLoggedIn ? (user?.home || "/dashboard") : "/login"}>
+          <Link className="inline-flex shrink-0 items-center gap-2 rounded-[8px] bg-white px-6 py-3.5 font-bold shadow-xl hover:bg-slate-50 transition" style={{ color: "#57344f" }} href={showLoggedIn ? (user?.home || "/dashboard") : "/login"}>
             {showLoggedIn ? "Go to Dashboard" : "Open Sandbox Workspace"} <ArrowRight className="h-4.5 w-4.5" />
           </Link>
         </div>
@@ -728,9 +703,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1440px] px-5 lg:px-8 grid gap-8 md:grid-cols-[1fr_auto]">
           <div>
             <Link href="/" className="text-white text-lg font-extrabold hover:text-white/80 transition cursor-pointer">
-              ORBIS ERP
+              Shiv Furniture Works
             </Link>
-            <p className="mt-2 text-xs text-slate-500">The digital backbone of industrial scale.</p>
+            <p className="mt-2 text-xs text-slate-500">The digital backbone for furniture manufacturing.</p>
           </div>
           <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-400">
             <a href="#platform" className="hover:text-white transition">Modules</a>

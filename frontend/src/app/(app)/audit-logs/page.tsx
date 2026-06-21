@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadCSV } from "@/lib/utils";
+
 import { useState, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/erp/page-header";
@@ -129,6 +131,8 @@ function AuditLogsList() {
         eyebrow="Governance" 
         title="Audit Logs" 
         description="Comprehensive audit trail of entity modifications, field values, and user access history."
+        action="Export CSV"
+        onAction={() => downloadCSV(entries, "audit_logs.csv")}
       />
 
       {/* KPI Stats cards */}

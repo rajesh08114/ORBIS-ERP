@@ -20,6 +20,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "name",
             "sku",
             "category",
+            "image",
             "sales_price",
             "cost_price",
             "on_hand_quantity",

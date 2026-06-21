@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/providers/providers";
+import { SparklesBackground } from "@/components/ui/sparkles";
 
 export const metadata: Metadata = {
   title: "ORBIS ERP",
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className="relative">
+        <SparklesBackground />
         <Providers>{children}</Providers>
       </body>
     </html>

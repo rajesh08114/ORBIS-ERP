@@ -1,52 +1,80 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useErpStore } from "@/stores/erp-store";
 import { PageHeader } from "@/components/erp/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/field";
+import { Input, Select } from "@/components/ui/field";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api-client";
+import { useProducts, useBoms } from "@/hooks/use-erp";
 
 const schema = z.object({
-  product: z.string().min(2, "Product is required"),
-  workCenter: z.string().min(2, "Work Center is required"),
-  priority: z.enum(["Low", "Medium", "High"], { required_error: "Priority is required" })
+  reference: z.string().min(1, "Reference is required"),
+  bom_id: z.string().optional(),
+  finished_product_id: z.string().min(1, "Product is required"),
+  quantity: z.coerce.number().min(0.01, "Quantity must be > 0")
 });
 
 type FormValues = z.infer<typeof schema>;
 
-const workCenters = ["CNC Station A", "Manual Assembly 4", "Painting Booth 2", "QC Lab", "Packaging Cell"];
-
 export default function NewManufacturingOrderPage() {
   const router = useRouter();
-  const products = useErpStore((state) => state.products).slice(0, 15); // Show first 15 products for mock selection
-  const addWorkOrder = useErpStore((state) => state.addWorkOrder);
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: boms = [], isLoading: bomsLoading } = useBoms();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      product: products[0]?.name || "",
-      workCenter: workCenters[0],
-      priority: "Medium"
+      reference: `MO-${Math.floor(Math.random() * 10000)}`,
+      bom_id: "",
+      finished_product_id: "",
+      quantity: 1,
     }
   });
 
-  const onSubmit = (data: FormValues) => {
+  const selectedBomId = watch("bom_id");
+
+  const bomMap = useMemo(() => {
+    const map = new Map<number, any>();
+    boms.forEach((b: any) => map.set(b.id, b));
+    return map;
+  }, [boms]);
+
+  useEffect(() => {
+    if (selectedBomId) {
+      const bom = bomMap.get(Number(selectedBomId));
+      if (bom) {
+        setValue("finished_product_id", bom.finished_product?.toString());
+        setValue("quantity", parseFloat(bom.quantity) || 1.0);
+      }
+    }
+  }, [selectedBomId, bomMap, setValue]);
+
+  const onSubmit = async (data: FormValues) => {
     try {
-      addWorkOrder({
-        product: data.product,
-        workCenter: data.workCenter,
-        stage: "Draft",
-        priority: data.priority
+      const payload: any = {
+        reference: data.reference,
+        finished_product: Number(data.finished_product_id),
+        quantity: data.quantity,
+      };
+      if (data.bom_id) {
+        payload.bom = Number(data.bom_id);
+      }
+      
+      await apiClient("manufacturing-orders/", {
+        method: "POST",
+        body: JSON.stringify(payload)
       });
-      toast.success("Manufacturing order queued successfully.");
+      
+      toast.success("Manufacturing order created successfully.");
       router.push("/manufacturing/orders");
-    } catch (error) {
-      toast.error("Failed to queue manufacturing order.");
+    } catch (error: any) {
+      toast.error(`Failed to create order: ${error.message}`);
     }
   };
 
@@ -60,50 +88,52 @@ export default function NewManufacturingOrderPage() {
       <Card className="max-w-2xl p-6 border-[var(--border)] bg-[var(--surface)] rounded-[12px]">
         <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-2">
-            <span className="text-sm font-semibold text-[var(--foreground)]">Product Assembly</span>
-            <Select {...register("product")} className={errors.product ? "border-[var(--danger)]" : ""}>
-              {products.map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name} (SKU: {p.sku})
+            <span className="text-sm font-semibold text-[var(--foreground)]">Reference</span>
+            <Input {...register("reference")} className={errors.reference ? "border-[var(--danger)]" : ""} />
+            {errors.reference && <span className="text-xs text-[var(--danger)]">{errors.reference.message}</span>}
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-sm font-semibold text-[var(--foreground)]">Bill of Material (Optional)</span>
+            <Select {...register("bom_id")} className={errors.bom_id ? "border-[var(--danger)]" : ""}>
+              <option value="">No BOM</option>
+              {boms.map((b: any) => (
+                <option key={b.id} value={b.id}>
+                  {b.code}
                 </option>
               ))}
             </Select>
-            {errors.product && (
-              <span className="text-xs text-[var(--danger)]">{errors.product.message}</span>
-            )}
+            <span className="text-[10px] text-[var(--muted)]">Selecting a BOM will auto-fill the product and quantity.</span>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Routing Work Center</span>
-              <Select {...register("workCenter")} className={errors.workCenter ? "border-[var(--danger)]" : ""}>
-                {workCenters.map((wc) => (
-                  <option key={wc} value={wc}>
-                    {wc}
+              <span className="text-sm font-semibold text-[var(--foreground)]">Finished Product</span>
+              <Select {...register("finished_product_id")} className={errors.finished_product_id ? "border-[var(--danger)]" : ""}>
+                <option value="">Select a product...</option>
+                {products.map((p: any) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
                   </option>
                 ))}
               </Select>
-              {errors.workCenter && (
-                <span className="text-xs text-[var(--danger)]">{errors.workCenter.message}</span>
+              {errors.finished_product_id && (
+                <span className="text-xs text-[var(--danger)]">{errors.finished_product_id.message}</span>
               )}
             </div>
 
             <div className="grid gap-2">
-              <span className="text-sm font-semibold text-[var(--foreground)]">Operational Priority</span>
-              <Select {...register("priority")} className={errors.priority ? "border-[var(--danger)]" : ""}>
-                <option value="Low">Low Clearance (Standard)</option>
-                <option value="Medium">Medium Clearance (Expedite)</option>
-                <option value="High">High Clearance (Critical)</option>
-              </Select>
-              {errors.priority && (
-                <span className="text-xs text-[var(--danger)]">{errors.priority.message}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">Quantity to Produce</span>
+              <Input type="number" step="0.01" {...register("quantity")} className={errors.quantity ? "border-[var(--danger)]" : ""} />
+              {errors.quantity && (
+                <span className="text-xs text-[var(--danger)]">{errors.quantity.message}</span>
               )}
             </div>
           </div>
 
           <div className="flex gap-3 border-t border-[var(--border)] pt-5 mt-2">
-            <Button type="submit" variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? "Queueing..." : "Queue Order"}
+            <Button type="submit" variant="primary" disabled={isSubmitting || productsLoading || bomsLoading}>
+              {isSubmitting ? "Queueing..." : "Create Order"}
             </Button>
             <Button
               type="button"

@@ -1,5 +1,7 @@
 "use client";
 
+import { downloadCSV } from "@/lib/utils";
+
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/components/erp/page-header";
@@ -61,6 +63,7 @@ export default function InventoryLedgerPage() {
         title="Stock Ledger Audit" 
         description="Every inventory receipt, adjustment, issue, and internal transfer logged under chronological sequence." 
         action="Export CSV"
+        onAction={() => downloadCSV(filteredData, "inventory_ledger.csv")}
       />
 
       {/* Filter Tabs */}

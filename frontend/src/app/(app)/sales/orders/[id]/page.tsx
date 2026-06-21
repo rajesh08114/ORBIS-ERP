@@ -33,11 +33,19 @@ export default function SalesOrderDetailPage({ params }: { params: Promise<{ id:
 
   const confirmMutation = useMutation({
     mutationFn: () => erpService.confirmSalesOrder(id),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["salesOrder", id] });
       queryClient.invalidateQueries({ queryKey: ["salesOrders"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Sales order confirmed successfully.");
+      
+      if (data?.procurements && data.procurements.length > 0) {
+        data.procurements.forEach((proc: any) => {
+          const typeName = proc.type === "PurchaseOrder" ? "Purchase Order" : "Manufacturing Order";
+          toast.success(`Sales order confirmed! Auto-created ${typeName}: ${proc.reference} for ${proc.quantity} units of ${proc.product}.`, { duration: 6000 });
+        });
+      } else {
+        toast.success("Sales order confirmed successfully.");
+      }
     },
     onError: (err: any) => {
       toast.error(`Confirmation failed: ${err.message || "Insufficient stock or error"}`);
@@ -100,174 +108,129 @@ export default function SalesOrderDetailPage({ params }: { params: Promise<{ id:
   const isCancelled = order.status === "cancelled";
 
   return (
-    <>
-      <div className="mb-4 flex justify-between items-center">
-        <Link href="/sales/orders" className="inline-flex items-center gap-2 text-xs font-bold text-[var(--muted)] hover:text-[var(--foreground)] transition">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Sales Orders
-        </Link>
-        <Link href={`/audit-logs?entity_type=SalesOrder&entity_id=${order.id}`}>
-          <Button variant="secondary" size="sm">
-            <FileClock className="h-4 w-4 mr-1.5" /> Logs
-          </Button>
-        </Link>
-      </div>
-
-      <PageHeader 
-        eyebrow="Sales Order Detail" 
-        title={order.reference || `#${order.id}`} 
-        description={`Fulfillment loop for customer ${order.customer_name}. Created at: ${new Date(order.created_at).toLocaleString()}.`}
-      />
-
-      <div className="grid gap-6">
-        {/* Live workflow tracker */}
-        <TwinFlow />
-
-        {/* Workflow actions bar */}
-        <Card className="p-4 flex flex-wrap gap-3 items-center bg-[var(--surface-muted)] border-[var(--border)] rounded-[12px]">
-          <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mr-2">
-            Fulfillment Controls:
-          </span>
-
-          {isDraft && (
-            <>
-              <Button onClick={() => confirmMutation.mutate()} variant="primary" disabled={confirmMutation.isPending}>
-                {confirmMutation.isPending ? "Confirming..." : "Confirm Order"}
-              </Button>
-              <Button onClick={() => cancelMutation.mutate()} variant="ghost" className="text-xs text-[var(--danger)] hover:bg-[var(--danger-soft)]" disabled={cancelMutation.isPending}>
-                Cancel Order
-              </Button>
-            </>
-          )}
-
-          {(isConfirmed || isPartial) && (
-            <>
-              <Button onClick={() => deliverMutation.mutate()} variant="primary" disabled={deliverMutation.isPending}>
-                {deliverMutation.isPending ? "Delivering..." : "Deliver Remaining"}
-              </Button>
-              <Button onClick={() => cancelMutation.mutate()} variant="ghost" className="text-xs text-[var(--danger)] hover:bg-[var(--danger-soft)]" disabled={cancelMutation.isPending}>
-                Cancel Order
-              </Button>
-            </>
-          )}
-
-          {isDelivered && (
-            <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
-              <CheckCircle2 className="h-5 w-5" /> Order Fully Delivered & Dispatched
-            </div>
-          )}
-
-          {isCancelled && (
-            <div className="flex items-center gap-2 text-[var(--danger)] font-bold text-sm">
-              <AlertTriangle className="h-5 w-5" /> Order Cancelled
-            </div>
-          )}
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-[var(--muted)]">Status:</span>
-            <Badge tone={statusTone(statusFormatted)}>{statusFormatted}</Badge>
+    <div className="max-w-5xl mx-auto space-y-4 font-sans pb-12">
+      <div className="text-center md:text-left mb-6">
+        <h1 className="text-xl text-[var(--muted)] font-medium mb-2">Sales Order</h1>
+        
+        {/* Top Action Bar */}
+        <div className="flex justify-between items-center">
+          <div className="flex bg-[var(--surface)] border border-[var(--border)] rounded-md overflow-hidden shadow-sm">
+            <Link href="/sales/orders" className="px-5 py-2 text-sm font-medium border-r border-[var(--border)] hover:bg-[var(--surface-muted)] transition">
+              Back
+            </Link>
+            
+            <button 
+              onClick={() => confirmMutation.mutate()} 
+              disabled={!isDraft || confirmMutation.isPending}
+              className={`px-5 py-2 text-sm border-r border-[var(--border)] transition ${isDraft ? 'hover:bg-[var(--surface-muted)] font-medium text-[var(--foreground)]' : 'text-[var(--muted)] cursor-not-allowed bg-[var(--surface-muted)]'}`}
+            >
+              Confirm
+            </button>
+            
+            <button 
+              onClick={() => deliverMutation.mutate()} 
+              disabled={!(isConfirmed || isPartial) || deliverMutation.isPending}
+              className={`px-5 py-2 text-sm border-r border-[var(--border)] transition ${(isConfirmed || isPartial) ? 'hover:bg-[var(--surface-muted)] font-medium text-[var(--foreground)]' : 'text-[var(--muted)] cursor-not-allowed bg-[var(--surface-muted)]'}`}
+            >
+              Deliver
+            </button>
+            
+            <button 
+              onClick={() => cancelMutation.mutate()} 
+              disabled={isCancelled || isDelivered || cancelMutation.isPending}
+              className={`px-5 py-2 text-sm transition ${(isCancelled || isDelivered) ? 'text-[var(--muted)] cursor-not-allowed bg-[var(--surface-muted)]' : 'hover:bg-[var(--surface-muted)] font-medium text-[var(--foreground)]'}`}
+            >
+              Cancel
+            </button>
           </div>
-        </Card>
 
-        {/* Detail grids */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Items */}
-          <Card className="lg:col-span-2 p-5 flex flex-col justify-between border-[var(--border)] bg-[var(--surface)]">
-            <div>
-              <h3 className="text-lg font-bold mb-4">Order Line Items</h3>
-              <div className="overflow-x-auto rounded-[8px] border border-[var(--border)]">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-[var(--surface-muted)] text-[var(--muted)] font-semibold text-left border-b border-[var(--border)]">
-                      <th className="p-3">SKU</th>
-                      <th className="p-3">Product</th>
-                      <th className="p-3 text-right">Ordered</th>
-                      <th className="p-3 text-right">Reserved</th>
-                      <th className="p-3 text-right">Delivered</th>
-                      <th className="p-3 text-right">Unit Price</th>
-                      <th className="p-3 text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((line: any) => {
-                      const qty = parseFloat(line.quantity_ordered) || 0;
-                      const price = parseFloat(line.unit_price) || 0;
-                      return (
-                        <tr key={line.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--surface-muted)] transition">
-                          <td className="p-3 font-semibold">{line.product_sku || `PROD-${line.product}`}</td>
-                          <td className="p-3">{line.product_name || `Product #${line.product}`}</td>
-                          <td className="p-3 text-right font-medium">{qty}</td>
-                          <td className="p-3 text-right text-blue-500 font-medium">{parseFloat(line.quantity_reserved) || 0}</td>
-                          <td className="p-3 text-right text-emerald-500 font-medium">{parseFloat(line.quantity_delivered) || 0}</td>
-                          <td className="p-3 text-right">{formatCurrency(price)}</td>
-                          <td className="p-3 text-right font-bold">{formatCurrency(qty * price)}</td>
-                        </tr>
-                      );
-                    })}
-                    {lines.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="p-4 text-center text-[var(--muted)]">No line items in this order.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="border-t border-[var(--border)] pt-4 mt-6 flex justify-between items-center">
-              <span className="text-sm font-semibold text-[var(--muted)]">Total Order Value:</span>
-              <span className="text-xl font-extrabold text-[var(--primary)]">{formatCurrency(totalValue)}</span>
-            </div>
-          </Card>
-
-          {/* Logistics & Context info */}
-          <div className="space-y-6">
-            <Card className="p-5 border-[var(--border)] bg-[var(--surface)]">
-              <h3 className="text-lg font-bold mb-4">Delivery & Customer</h3>
-              <div className="space-y-3.5 text-sm">
-                <div>
-                  <span className="text-xs text-[var(--muted)] block">Customer Name</span>
-                  <span className="font-semibold">{order.customer_name}</span>
-                </div>
-                {order.notes && (
-                  <div>
-                    <span className="text-xs text-[var(--muted)] block">Order Notes</span>
-                    <span className="text-xs font-semibold whitespace-pre-line block mt-1 p-2 bg-[var(--surface-muted)] rounded border border-[var(--border)]">
-                      {order.notes}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <span className="text-xs text-[var(--muted)] block">Verification Status</span>
-                  <span className="flex items-center gap-1.5 text-emerald-500 font-bold mt-0.5">
-                    <ShieldCheck className="h-4 w-4" /> Operations Verified
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-5 border-[var(--border)] bg-[var(--surface)]">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[var(--primary)]" /> System Tracking
-              </h3>
-              <p className="text-xs text-[var(--muted)] font-medium">Automatic timestamps tracked by the database lifecycle.</p>
-              <div className="mt-4 space-y-3 text-xs">
-                <div className="flex justify-between border-b border-[var(--border)] pb-2">
-                  <span>Created At:</span>
-                  <span className="font-semibold">{new Date(order.created_at).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between border-b border-[var(--border)] pb-2">
-                  <span>Confirmed At:</span>
-                  <span className="font-semibold">{order.confirmed_at ? new Date(order.confirmed_at).toLocaleString() : "Not confirmed"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivered At:</span>
-                  <span className="font-semibold">{order.delivered_at ? new Date(order.delivered_at).toLocaleString() : "Not delivered"}</span>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <Link href={`/audit-logs?entity_type=SalesOrder&entity_id=${order.id}`} className="px-5 py-2 text-sm font-medium border border-[var(--border)] bg-[var(--surface)] rounded-md shadow-sm hover:bg-[var(--surface-muted)] transition flex items-center">
+            Logs
+          </Link>
         </div>
       </div>
-    </>
+
+      {/* Main Form View Card */}
+      <Card className="border border-[var(--border)] bg-[var(--surface)] rounded-lg shadow-sm overflow-hidden">
+        {/* Header */}
+        <div className="p-6 flex justify-between items-center border-b border-[var(--border)]">
+          <div className="text-xl font-bold border-2 border-dashed border-[var(--muted)] text-[var(--foreground)] px-4 py-2 rounded-md tracking-wider">
+            {order.reference || `#${order.id}`}
+          </div>
+          <div className="text-lg font-semibold text-[var(--foreground)]">
+            Status: {statusFormatted}
+          </div>
+        </div>
+
+        {/* Top Details */}
+        <div className="p-8 grid md:grid-cols-2 gap-x-12 gap-y-6 border-b border-[var(--border)]">
+          <div className="space-y-6">
+            <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+              <span className="font-semibold text-[var(--foreground)]">Customer</span>
+              <span className="border-b border-[var(--muted)] pb-1 font-medium">{order.customer_name}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+              <span className="font-semibold text-[var(--foreground)]">Customer Address</span>
+              <span className="border-b border-[var(--muted)] pb-1 min-h-[24px]"></span>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+              <span className="font-semibold text-[var(--foreground)]">Creation Date</span>
+              <span className="border-b border-[var(--muted)] pb-1 font-medium">{new Date(order.created_at).toLocaleDateString()}</span>
+            </div>
+            <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+              <span className="font-semibold text-[var(--foreground)]">Sales Person</span>
+              <span className="border-b border-[var(--muted)] pb-1 min-h-[24px] font-medium">System</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--border)] text-left bg-[var(--surface-muted)]">
+                <th className="p-4 font-bold text-[var(--foreground)]">Products</th>
+                <th className="p-4 font-bold text-[var(--foreground)]">Availability</th>
+                <th className="p-4 font-bold text-[var(--foreground)]">Ordered Quantity</th>
+                <th className="p-4 font-bold text-[var(--foreground)]">Delivered Quantity</th>
+                <th className="p-4 font-bold text-[var(--foreground)]">Units</th>
+                <th className="p-4 font-bold text-[var(--foreground)] text-right">Sales Unit Price</th>
+                <th className="p-4 font-bold text-[var(--foreground)] text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((line: any) => {
+                const qty = parseFloat(line.quantity_ordered) || 0;
+                const price = parseFloat(line.unit_price) || 0;
+                return (
+                  <tr key={line.id} className="border-b border-[var(--border)] hover:bg-[var(--surface-muted)] transition">
+                    <td className="p-4 font-medium">{line.product_name || `Product #${line.product}`}</td>
+                    <td className="p-4">{parseFloat(line.quantity_reserved) || 0}</td>
+                    <td className="p-4">{qty}</td>
+                    <td className="p-4">{parseFloat(line.quantity_delivered) || 0}</td>
+                    <td className="p-4">Units</td>
+                    <td className="p-4 text-right">{formatCurrency(price)}</td>
+                    <td className="p-4 text-right font-bold">{formatCurrency(qty * price)}</td>
+                  </tr>
+                );
+              })}
+              <tr className="border-b border-[var(--border)] bg-transparent">
+                <td colSpan={7} className="p-4 text-[var(--muted)] italic">Add a product</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Total */}
+        <div className="p-8 flex justify-end bg-[var(--surface-muted)]/30">
+          <div className="flex items-center gap-6 text-lg">
+            <span className="font-bold text-[var(--foreground)]">Total:</span>
+            <span className="border-b-2 border-[var(--muted)] min-w-[140px] text-right font-extrabold pb-1 text-[var(--primary)]">{formatCurrency(totalValue)}</span>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }

@@ -21,6 +21,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
     sku = models.CharField(max_length=64, unique=True, null=True, blank=True)
     category = models.CharField(max_length=255, null=True, blank=True)
+    image = models.ImageField(upload_to="products/images/", null=True, blank=True)
     sales_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     on_hand_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)

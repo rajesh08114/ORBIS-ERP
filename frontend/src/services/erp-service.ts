@@ -63,6 +63,21 @@ export const erpService = {
   },
   async auditSummary() {
     return apiClient<any>("audit/summary/");
+  },
+  async manufacturingOrders() {
+    return apiClient<any>("manufacturing-orders/");
+  },
+  async manufacturingOrderDetail(id: string | number) {
+    return apiClient<any>(`manufacturing-orders/${id}/`);
+  },
+  async confirmManufacturingOrder(id: string | number) {
+    return apiClient<any>(`manufacturing-orders/${id}/confirm/`, { method: "POST" });
+  },
+  async startManufacturingOrder(id: string | number) {
+    return apiClient<any>(`manufacturing-orders/${id}/start/`, { method: "POST" });
+  },
+  async completeManufacturingOrder(id: string | number) {
+    return apiClient<any>(`manufacturing-orders/${id}/complete/`, { method: "POST" });
   }
 };
 

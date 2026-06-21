@@ -21,6 +21,8 @@ const columns: ColumnDef<InventoryTransaction>[] = [
   { accessorKey: "timestamp", header: "Timestamp" }
 ];
 
+import { toast } from "sonner";
+
 export default function InventoryPage() {
   const products = useProducts();
   const transactions = useInventoryTransactions();
@@ -31,7 +33,13 @@ export default function InventoryPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Inventory Control" title="Inventory & Procurement Intelligence" description="On hand, reserved, available, incoming, outgoing, ledger, movements, health, and risk." action="Cycle Count" />
+      <PageHeader 
+        eyebrow="Inventory Control" 
+        title="Inventory & Procurement Intelligence" 
+        description="On hand, reserved, available, incoming, outgoing, ledger, movements, health, and risk." 
+        action="Cycle Count" 
+        onAction={() => toast.info("Cycle count interface loading...")}
+      />
       
       {/* Sub-Navigation Quick Links */}
       <Card className="mb-4 p-3 flex flex-wrap gap-2 items-center bg-[var(--surface)] border border-[var(--border)] rounded-[8px] hidden md:flex">

@@ -4,7 +4,7 @@ export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return (
     <input
       className={cn(
-        "focus-ring h-10 w-full rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)]",
+        "focus-ring h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 px-4 text-sm font-medium text-[var(--foreground)] placeholder:text-[var(--muted)]/70 shadow-inner transition-all duration-300 hover:border-[var(--primary-strong)]/50 focus:border-[var(--primary)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_4px_rgba(87,52,79,0.1)]",
         className
       )}
       {...props}
@@ -16,7 +16,7 @@ export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<H
   return (
     <textarea
       className={cn(
-        "focus-ring min-h-28 w-full rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)]",
+        "focus-ring min-h-28 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 px-4 py-3 text-sm font-medium text-[var(--foreground)] placeholder:text-[var(--muted)]/70 shadow-inner transition-all duration-300 hover:border-[var(--primary-strong)]/50 focus:border-[var(--primary)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_4px_rgba(87,52,79,0.1)]",
         className
       )}
       {...props}
@@ -28,7 +28,7 @@ export function Select({ className, children, ...props }: React.SelectHTMLAttrib
   return (
     <select
       className={cn(
-        "focus-ring h-10 w-full rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)]",
+        "focus-ring h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 px-4 text-sm font-medium text-[var(--foreground)] shadow-inner transition-all duration-300 hover:border-[var(--primary-strong)]/50 focus:border-[var(--primary)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_4px_rgba(87,52,79,0.1)]",
         className
       )}
       {...props}

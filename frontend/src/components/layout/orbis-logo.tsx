@@ -8,8 +8,8 @@ export function OrbisLogo({ compact = false }: { compact?: boolean }) {
       </div>
       {!compact ? (
         <div>
-          <div className="text-base font-bold leading-tight text-[var(--foreground)] group-hover:text-[var(--primary)] transition">ORBIS ERP</div>
-          <div className="text-xs text-[var(--muted)]">FlowForge source edition</div>
+          <div className="text-base font-bold leading-tight text-[var(--foreground)] group-hover:text-[var(--primary)] transition">Shiv Furniture</div>
+          <div className="text-xs text-[var(--muted)]"> ERP Platform</div>
         </div>
       ) : null}
     </Link>

@@ -36,7 +36,11 @@ export {
   Trash as Trash2,
   Truck,
   UpcScan as ScanLine,
-  Wrench
+  Wrench,
+  CheckCircle,
+  XCircle,
+  Image,
+  X
 } from "react-bootstrap-icons";
 
 export {
@@ -62,6 +66,7 @@ export {
   BoxSeam as PackageSearch,
   People as Users,
   Receipt as ReceiptText,
+  FileEarmarkText as FileText,
   SignpostSplit as Route,
   Gear as Settings,
   Cart as ShoppingCart,

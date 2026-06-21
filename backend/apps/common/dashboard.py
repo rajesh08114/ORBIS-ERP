@@ -1,12 +1,16 @@
+from django.contrib.auth import get_user_model
 from django.db.models import DecimalField, ExpressionWrapper, F, Sum, Value, Q
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
+from apps.audit.models import AuditEntry
 from apps.inventory.models import StockMovement
 from apps.manufacturing.models import ManufacturingOrder, BillOfMaterial
 from apps.products.models import Product
 from apps.purchases.models import PurchaseOrder
 from apps.sales.models import SalesOrder
+
+User = get_user_model()
 
 
 def get_dashboard_metrics(user=None):
@@ -125,6 +129,13 @@ def get_dashboard_metrics(user=None):
                 }
                 for movement in StockMovement.objects.order_by("-created_at", "-id")[:10]
             ],
+        },
+        "users": {
+            "total": User.objects.count(),
+            "active": User.objects.filter(is_active=True).count(),
+        },
+        "audit_events": {
+            "total": AuditEntry.objects.count(),
         },
     }
 

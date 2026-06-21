@@ -36,10 +36,11 @@ export default function NewUserPage() {
   const router = useRouter();
 
   // Query database roles
-  const { data: roles = [], isLoading } = useQuery<Group[]>({
+  const { data: rolesData, isLoading } = useQuery<any>({
     queryKey: ["roles"],
-    queryFn: () => apiClient<Group[]>("roles/"),
+    queryFn: () => apiClient<any>("roles/"),
   });
+  const roles: Group[] = rolesData?.results || (Array.isArray(rolesData) ? rolesData : []);
 
   const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),

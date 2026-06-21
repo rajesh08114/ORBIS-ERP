@@ -22,6 +22,8 @@ interface Group {
 interface UserProfile {
   role_title: string;
   status: string;
+  address?: string;
+  mobile?: string;
 }
 
 interface User {
@@ -56,6 +58,7 @@ function EditUserModal({ user, roles, onClose, onSuccess }: EditUserModalProps) 
     status: user.profile?.status || "active",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"Sales" | "Purchase" | "Manufacturing" | "Product">("Sales");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,59 +95,140 @@ function EditUserModal({ user, roles, onClose, onSuccess }: EditUserModalProps) 
     }
   };
 
+  const salesRows = [
+    { field: "Customer", c: true, v: true, e: true, d: true },
+    { field: "Customer Address", c: true, v: true, e: true, d: true },
+    { field: "Sales Person", c: true, v: true, e: true, d: true },
+    { field: "Product", c: true, v: true, e: true, d: true },
+    { field: "Ordered Quantity", c: true, v: true, e: true, d: true },
+    { field: "Delivered Quantity", c: true, v: true, e: true, d: true },
+    { field: "Sales Price", c: true, v: true, e: true, d: true },
+    { field: "Status", c: true, v: true, e: true, d: false },
+    { field: "Total", c: true, v: true, e: "Recomputed", d: null },
+    { field: "Creation Date", c: "Auto Compute", v: true, e: false, d: false },
+  ];
+
+  const purchaseRows = [
+    { field: "Vendor", c: true, v: true, e: true, d: true },
+    { field: "Vendor Address", c: true, v: true, e: true, d: true },
+    { field: "Responsible Person", c: true, v: true, e: true, d: true },
+    { field: "Product", c: true, v: true, e: true, d: true },
+    { field: "Ordered Quantity", c: true, v: true, e: true, d: true },
+    { field: "Received Quantity", c: true, v: true, e: true, d: true },
+    { field: "Cost Price", c: true, v: true, e: true, d: true },
+    { field: "Total", c: "Auto Computed", v: true, e: false, d: false },
+    { field: "Creation Date", c: "Auto Computed", v: true, e: false, d: false },
+  ];
+
+  const manufacturingRows = [
+    { field: "Product To Manufacture", c: true, v: true, e: true, d: true },
+    { field: "Product Quantity", c: true, v: true, e: true, d: true },
+    { field: "BoM", c: true, v: true, e: true, d: true },
+    { field: "Responsible Person", c: true, v: true, e: true, d: true },
+    { field: "Finished Quantity", c: true, v: true, e: true, d: true },
+    { field: "Creation Date", c: "Auto Computed", v: true, e: false, d: false },
+  ];
+
+  const productRows = [
+    { field: "Product", c: true, v: true, e: true, d: true },
+    { field: "Sales Price", c: true, v: true, e: true, d: true },
+    { field: "Cost Price", c: true, v: true, e: true, d: true },
+    { field: "On Hand Qty", c: true, v: true, e: true, d: true },
+    { field: "Free To Use Qty", c: "Auto Computed", v: true, e: false, d: false },
+    { field: "Procure On Demand", c: true, v: true, e: true, d: true },
+    { field: "Vendor", c: true, v: true, e: true, d: true },
+    { field: "Bill of Materials", c: true, v: true, e: true, d: true },
+  ];
+
+  const renderCell = (val: any) => {
+    if (val === true) return "✓";
+    if (val === false) return "✕";
+    if (val === null) return "";
+    return val;
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[4px]" onClick={onClose}>
-      <div className="relative w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
-          <h3 className="text-base font-bold text-[var(--foreground)]">Edit User Settings</h3>
-          <button onClick={onClose} className="text-[var(--muted)] hover:text-[var(--foreground)] text-sm font-bold p-1 rounded-full hover:bg-[var(--surface-muted)] transition">✕</button>
+      <div className="relative w-full max-w-2xl rounded-[16px] border border-[var(--border)] bg-[#101010] p-6 shadow-2xl text-slate-300 font-mono text-sm overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+          <h3 className="text-lg font-bold text-white">User Management Form View</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white p-1 rounded-full transition">✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Username *</label>
-              <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
+        
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-6">
+          {/* Top Section */}
+          <div className="flex items-start justify-between border border-slate-800 rounded-[12px] p-5 border-dashed">
+            <div className="space-y-3">
+              <div className="text-xs text-rose-500 italic mb-2">readonly</div>
+              <div className="flex"><span className="w-32 font-bold text-white">Name:</span> <span>{user.first_name} {user.last_name}</span></div>
+              <div className="flex"><span className="w-32 font-bold text-white">Address:</span> <span>{user.profile?.address || "N/A"}</span></div>
+              <div className="flex"><span className="w-32 font-bold text-white">Mobile Number:</span> <span>{user.profile?.mobile || "N/A"}</span></div>
+              <div className="flex"><span className="w-32 font-bold text-white">Email ID:</span> <span>{user.email}</span></div>
+              
+              <div className="flex items-center pt-2 mt-2 border-t border-slate-800">
+                <span className="w-32 font-bold text-white">Platform Role:</span> 
+                <input 
+                  value={form.role_title} 
+                  onChange={(e) => setForm({ ...form, role_title: e.target.value })} 
+                  className="bg-transparent border-b border-slate-700 text-white focus:outline-none focus:border-blue-500 px-1 py-0.5 w-48"
+                />
+                <span className="text-xs text-rose-500 italic ml-4">Only Platform Role is editable</span>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Email *</label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">First Name</label>
-              <Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Last Name</label>
-              <Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Workspace Group / Role</label>
-              <Select value={form.groupId} onChange={(e) => setForm({ ...form, groupId: e.target.value })}>
-                <option value="">No Role Group Assigned</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Job Title</label>
-              <Input value={form.role_title} onChange={(e) => setForm({ ...form, role_title: e.target.value })} placeholder="e.g. Senior ERP Analyst" />
+            
+            <div className="flex flex-col items-end">
+              <div className="relative w-24 h-32 rounded-[12px] border border-slate-700 bg-slate-900 flex items-center justify-center">
+                <span className="text-xs text-slate-600">Avatar</span>
+                <button type="button" className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-105 transition">
+                  <PencilSquare className="h-3 w-3" />
+                </button>
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">SSO clearance Status</label>
-            <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="active">Active (Permit Access)</option>
-              <option value="inactive">Inactive / Hold (Lock Access)</option>
-            </Select>
+
+          {/* Bottom Section - Matrix */}
+          <div className="border border-slate-800 rounded-[12px] overflow-hidden">
+            <div className="flex border-b border-slate-800">
+              {["Sales", "Purchase", "Manufacturing", "Product"].map(tab => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`px-4 py-2 border-r border-slate-800 text-xs font-bold ${activeTab === tab ? "bg-slate-800 text-white" : "bg-transparent text-slate-500 hover:text-slate-300"}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className="p-0 overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[600px]">
+                <thead className="border-b border-slate-800 text-white">
+                  <tr>
+                    <th className="py-2 px-3 border-r border-slate-800">Field</th>
+                    <th className="py-2 px-3 border-r border-slate-800 text-center w-20">Create</th>
+                    <th className="py-2 px-3 border-r border-slate-800 text-center w-20">View</th>
+                    <th className="py-2 px-3 border-r border-slate-800 text-center w-24">Edit</th>
+                    <th className="py-2 px-3 text-center w-20">Delete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(activeTab === "Sales" ? salesRows : activeTab === "Purchase" ? purchaseRows : activeTab === "Manufacturing" ? manufacturingRows : productRows).map((row, idx) => (
+                    <tr key={idx} className="border-b border-slate-800/50 hover:bg-slate-800/20">
+                      <td className="py-2 px-3 border-r border-slate-800 text-white">{row.field}</td>
+                      <td className="py-2 px-3 border-r border-slate-800 text-center text-slate-400">{renderCell(row.c)}</td>
+                      <td className="py-2 px-3 border-r border-slate-800 text-center text-slate-400">{renderCell(row.v)}</td>
+                      <td className="py-2 px-3 border-r border-slate-800 text-center text-slate-400">{renderCell(row.e)}</td>
+                      <td className="py-2 px-3 text-center text-slate-400">{renderCell(row.d)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="flex justify-end gap-3 pt-3 border-t border-[var(--border)]">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-bold uppercase border border-[var(--border)] rounded-lg hover:bg-[var(--surface-muted)] text-[var(--foreground)] transition cursor-pointer">Cancel</button>
-            <button type="submit" disabled={submitting} className="px-4 py-2 text-xs font-bold uppercase bg-[var(--primary-strong)] text-white rounded-lg hover:opacity-90 transition cursor-pointer disabled:opacity-50">
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-bold uppercase border border-slate-700 rounded-lg hover:bg-slate-800 text-white transition cursor-pointer">Cancel</button>
+            <button type="submit" disabled={submitting} className="px-4 py-2 text-xs font-bold uppercase bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition cursor-pointer disabled:opacity-50">
               {submitting ? "Updating..." : "Save Changes"}
             </button>
           </div>
@@ -158,6 +242,7 @@ export default function UsersPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<"users" | "permissions">("users");
 
   // Fetch Users
   const { data: usersData, isLoading, error } = useQuery<any>({
@@ -168,10 +253,11 @@ export default function UsersPage() {
   const users: User[] = usersData?.results || (Array.isArray(usersData) ? usersData : []);
 
   // Fetch Roles
-  const { data: roles = [] } = useQuery<Group[]>({
+  const { data: rolesData, isLoading: rolesLoading } = useQuery<any>({
     queryKey: ["roles"],
-    queryFn: () => apiClient<Group[]>("roles/"),
+    queryFn: () => apiClient<any>("roles/"),
   });
+  const roles: Group[] = rolesData?.results || (Array.isArray(rolesData) ? rolesData : []);
 
   // Toggle status mutation
   const toggleStatusMutation = useMutation({
@@ -229,6 +315,10 @@ export default function UsersPage() {
         title="User Management" 
         description="Monitor system-wide user credentials, assign workspace roles, and configure clearance status." 
       />
+
+      <div className="mt-4">
+        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4">System Administrator Dashboard</h2>
+      </div>
 
       {/* KPI stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">

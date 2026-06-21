@@ -49,7 +49,7 @@ class BillOfMaterialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BillOfMaterial
-        fields = ["id", "code", "finished_product", "version", "is_active", "notes", "created_at", "lines"]
+        fields = ["id", "code", "finished_product", "quantity", "version", "is_active", "notes", "created_at", "lines"]
         read_only_fields = ["id", "created_at", "lines"]
 
 
@@ -193,8 +193,28 @@ class BillOfMaterialViewSet(viewsets.ModelViewSet):
         "destroy": [MANUFACTURING_CREATE],
     }
 
+    def perform_create(self, serializer):
+        from apps.audit.services import log_audit_event
+        instance = serializer.save()
+        log_audit_event(
+            entity_name="BillOfMaterial",
+            entity_id=str(instance.pk),
+            action="created",
+            details={"code": instance.code, "finished_product_id": instance.finished_product_id},
+        )
+
     def perform_update(self, serializer):
         audit_update(self.get_object(), serializer, "BillOfMaterial")
+
+    def perform_destroy(self, instance):
+        from apps.audit.services import log_audit_event
+        log_audit_event(
+            entity_name="BillOfMaterial",
+            entity_id=str(instance.pk),
+            action="deleted",
+            details={"code": instance.code},
+        )
+        instance.delete()
 
 
 class BillOfMaterialLineViewSet(viewsets.ModelViewSet):
@@ -213,8 +233,28 @@ class BillOfMaterialLineViewSet(viewsets.ModelViewSet):
         "destroy": [MANUFACTURING_CREATE],
     }
 
+    def perform_create(self, serializer):
+        from apps.audit.services import log_audit_event
+        instance = serializer.save()
+        log_audit_event(
+            entity_name="BillOfMaterialLine",
+            entity_id=str(instance.pk),
+            action="created",
+            details={"bom_id": instance.bom_id, "component_id": instance.component_id},
+        )
+
     def perform_update(self, serializer):
         audit_update(self.get_object(), serializer, "BillOfMaterialLine")
+
+    def perform_destroy(self, instance):
+        from apps.audit.services import log_audit_event
+        log_audit_event(
+            entity_name="BillOfMaterialLine",
+            entity_id=str(instance.pk),
+            action="deleted",
+            details={"bom_id": instance.bom_id, "component_id": instance.component_id},
+        )
+        instance.delete()
 
 
 class ManufacturingOrderLineViewSet(viewsets.ReadOnlyModelViewSet):

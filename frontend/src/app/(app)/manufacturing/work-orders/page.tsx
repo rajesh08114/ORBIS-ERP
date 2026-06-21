@@ -87,6 +87,7 @@ export default function WorkOrdersListPage() {
         title="Manufacturing Work Orders" 
         description="Launch components, check progress metrics, assign machinery locations, and manage priorities across assembly queues."
         action="New Work Order"
+        actionHref="/manufacturing/orders/new"
       />
 
       {/* Filter Tabs */}

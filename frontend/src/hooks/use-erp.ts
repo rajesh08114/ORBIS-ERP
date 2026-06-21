@@ -19,8 +19,40 @@ export function useProducts() {
   const user = useAuthStore((s) => s.user);
   return useQuery({
     queryKey: ["products"],
-    queryFn: () => erpService.products().then((res: any) => res.results || res),
+    queryFn: () => erpService.products().then((res: any) => {
+      const results = res.results || res;
+      return Array.isArray(results) ? results.map((p: any) => ({
+        ...p,
+        id: p.id?.toString(),
+        onHand: parseFloat(p.on_hand_quantity) || 0,
+        reserved: parseFloat(p.reserved_quantity) || 0,
+        incoming: 0,
+        unitCost: parseFloat(p.cost_price) || 0,
+        salesPrice: parseFloat(p.sales_price) || 0,
+        costPrice: parseFloat(p.cost_price) || 0,
+        freeToUse: parseFloat(p.free_to_use_quantity) || 0,
+        procureOnDemand: p.procure_on_demand,
+        procurementType: p.procurement_type,
+        vendor_id: p.vendor?.toString(),
+        bom_id: p.default_bom?.toString(),
+        vendor_name: p.vendor_name,
+        status: (parseFloat(p.on_hand_quantity) - parseFloat(p.reserved_quantity || 0)) <= 5
+          ? "Critical"
+          : (parseFloat(p.on_hand_quantity) - parseFloat(p.reserved_quantity || 0)) <= 20
+          ? "Delayed"
+          : "Healthy",
+      })) : [];
+    }),
     enabled: !!user,
+  });
+}
+
+export function useProductDetail(id: string) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: ["product", id],
+    queryFn: () => apiClient<any>(`products/${id}/`),
+    enabled: !!user && id !== "new",
   });
 }
 
@@ -87,6 +119,48 @@ export function usePurchaseOrders() {
       return Array.isArray(results) ? results.map((o) => mapOrder(o, "purchase")) : [];
     }),
     enabled: !!user,
+  });
+}
+
+const mapManufacturingOrder = (order: any): Order => {
+  const statusRaw = order.status || "draft";
+  let statusStr = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1);
+  if (statusStr === "In_progress") statusStr = "In Progress";
+  
+  return {
+    id: order.reference || order.id?.toString(),
+    dbId: order.id,
+    party: order.assignee?.username || "Unassigned", // Assignee maps to party for generic views
+    value: parseFloat(order.quantity) || 0, // In manufacturing, we often care about quantity
+    due: order.created_at ? new Date(order.created_at).toLocaleDateString() : "",
+    status: statusStr as Status,
+    risk: "Low",
+    scheduled_date: order.scheduled_date,
+    finishedProduct: order.finished_product?.name || "Unknown Product",
+    quantity: parseFloat(order.quantity) || 0,
+    unit: "Units", // Default unit
+    componentStatus: order.status === "draft" ? "Draft" : "Available", // Simplified for now
+  };
+};
+
+export function useManufacturingOrders() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: ["manufacturingOrders"],
+    queryFn: () => erpService.manufacturingOrders().then((res: any) => {
+      const results = res.results || res;
+      return Array.isArray(results) ? results.map(mapManufacturingOrder) : [];
+    }),
+    enabled: !!user,
+  });
+}
+
+export function useManufacturingOrderDetail(id: string | number) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: ["manufacturingOrder", id],
+    queryFn: () => erpService.manufacturingOrderDetail(id),
+    enabled: !!user && !!id,
   });
 }
 
@@ -186,6 +260,15 @@ export function useBoms() {
     queryKey: ["boms"],
     queryFn: () => apiClient<any>("boms/").then((res: any) => res.results || res),
     enabled: !!user,
+  });
+}
+
+export function useBomDetail(id: string | number) {
+  const user = useAuthStore((s) => s.user);
+  return useQuery<any>({
+    queryKey: ["bom", id],
+    queryFn: () => apiClient<any>(`boms/${id}/`),
+    enabled: !!user && !!id && id !== "new",
   });
 }
 

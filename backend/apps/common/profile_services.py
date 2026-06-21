@@ -7,8 +7,7 @@ from django.forms.models import model_to_dict
 
 from apps.common.models import UserProfile as CommonUserProfile
 from apps.users.models import UserProfile as AccountUserProfile
-
-User = get_user_model()
+from django.contrib.auth.models import User, Group
 
 
 def ensure_profile_bundle(user: User) -> tuple[CommonUserProfile, AccountUserProfile]:

@@ -19,34 +19,34 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, trend, trendUp, subtext, icon: Icon, href, tone = "primary", statusDot }: KpiCardProps) {
   const toneMap = {
-    primary: "text-[var(--primary)] bg-[var(--primary-soft)]",
-    success: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400",
-    warning: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400",
-    danger: "text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-400",
-    info: "text-sky-600 bg-sky-50 dark:bg-sky-950/40 dark:text-sky-400",
+    primary: "text-[var(--primary-strong)] bg-[var(--primary-soft)]",
+    success: "text-[var(--success)] bg-[var(--success-soft)]",
+    warning: "text-[var(--warning)] bg-[var(--warning-soft)]",
+    danger: "text-[var(--danger)] bg-[var(--danger-soft)]",
+    info: "text-[var(--info)] bg-[var(--info-soft)]",
     neutral: "text-[var(--muted)] bg-[var(--surface-muted)]",
   };
-  const dotMap = { green: "bg-emerald-500", amber: "bg-amber-400", red: "bg-red-500" };
+  const dotMap = { green: "bg-[var(--success)]", amber: "bg-[var(--warning)]", red: "bg-[var(--danger)]" };
 
   const inner = (
-    <div className={`group relative flex flex-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition-all duration-200 ${href ? "cursor-pointer hover:border-[var(--primary)] hover:shadow-md hover:scale-[1.01]" : ""}`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] truncate">{label}</div>
-          <div className="mt-0.5 text-xl font-extrabold tracking-tight text-[var(--foreground)] leading-none">{value}</div>
-        </div>
-        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${toneMap[tone]}`}>
+    <div className={`group relative flex flex-col justify-between rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm transition-all duration-200 min-h-[110px] ${href ? "cursor-pointer hover:border-[var(--primary-strong)] hover:shadow-md hover:-translate-y-0.5" : ""}`}>
+      <div className="flex items-start justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{label}</div>
+        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-[8px] ${toneMap[tone]}`}>
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      <div className="flex items-center gap-2 mt-1">
-        {statusDot && <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotMap[statusDot]}`} />}
-        {trend && (
-          <span className={`text-[10px] font-bold ${trendUp ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
-            {trendUp ? "↑" : "↓"} {trend}
-          </span>
-        )}
-        {subtext && <span className="text-[10px] text-[var(--muted)] truncate">{subtext}</span>}
+      <div>
+        <div className="mt-2 text-2xl font-black text-[var(--foreground)] leading-none tracking-tight">{value}</div>
+        <div className="flex items-center gap-1.5 mt-2">
+          {statusDot && <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotMap[statusDot]}`} />}
+          {trend && (
+            <span className={`text-[10px] font-bold ${trendUp ? "text-emerald-600" : "text-red-500"}`}>
+              {trendUp ? "↑" : "↓"} {trend}
+            </span>
+          )}
+          {subtext && <span className="text-[10px] font-medium text-[var(--muted)] truncate">{subtext}</span>}
+        </div>
       </div>
     </div>
   );

@@ -105,6 +105,33 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         "cancel": [PURCHASE_CREATE],
     }
 
+    def perform_create(self, serializer):
+        from apps.audit.services import log_audit_event
+        instance = serializer.save(assignee=self.request.user)
+        log_audit_event(
+            entity_name="PurchaseOrder",
+            entity_id=str(instance.pk),
+            action="created",
+            details=serializer.data,
+        )
+
+    def perform_update(self, serializer):
+        from apps.audit.services import audit_update
+        instance = self.get_object()
+        audit_update(instance, serializer, "PurchaseOrder")
+
+    def perform_destroy(self, instance):
+        from apps.audit.services import log_audit_event
+        pk = instance.pk
+        ref = instance.reference
+        instance.delete()
+        log_audit_event(
+            entity_name="PurchaseOrder",
+            entity_id=str(pk),
+            action="deleted",
+            details={"reference": ref},
+        )
+
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         order = self.get_object()

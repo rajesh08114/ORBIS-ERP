@@ -20,7 +20,7 @@ def _auto_reference(prefix: str, order: SalesOrder, line_id: int) -> str:
     return f"{prefix}-{order.reference}-{line_id}"
 
 
-def _trigger_procurement(order: SalesOrder, line: SalesOrderLine, shortage: Decimal) -> None:
+def _trigger_procurement(order: SalesOrder, line: SalesOrderLine, shortage: Decimal) -> dict:
     product = line.product
     trigger_reason = f"Sales shortage for {order.reference}"
     log_audit_event(
@@ -56,7 +56,7 @@ def _trigger_procurement(order: SalesOrder, line: SalesOrderLine, shortage: Deci
             unit_cost=product.cost_price,
         )
         confirm_purchase_order(purchase_order)
-        return
+        return {"type": "PurchaseOrder", "reference": purchase_order.reference, "product": product.name, "quantity": str(shortage)}
 
     if product.procurement_type == Product.PROCUREMENT_MANUFACTURE:
         bom = product.default_bom or active_bom_for_product(product)
@@ -72,13 +72,14 @@ def _trigger_procurement(order: SalesOrder, line: SalesOrderLine, shortage: Deci
             created_by_system=True,
         )
         confirm_manufacturing_order(manufacturing_order)
-        return
+        return {"type": "ManufacturingOrder", "reference": manufacturing_order.reference, "product": product.name, "quantity": str(shortage)}
 
     raise ValidationError(f"Unsupported procurement type for {product.name}.")
 
 
 @transaction.atomic
-def confirm_sales_order(order: SalesOrder) -> SalesOrder:
+def confirm_sales_order(order: SalesOrder) -> tuple[SalesOrder, list]:
+    procurements = []
     order = (
         SalesOrder.objects.select_for_update()
         .prefetch_related("lines__product")
@@ -133,12 +134,13 @@ def confirm_sales_order(order: SalesOrder) -> SalesOrder:
                     old_value=str(line.quantity_reserved - available),
                     new_value=str(line.quantity_reserved),
                 )
-            if product.procurement_strategy != Product.PROCUREMENT_MTO or not product.procure_on_demand:
+            if not product.procure_on_demand:
                 raise ValidationError(
                     f"Not enough free stock for {product.name}. "
                     f"Required {required}, available {available}."
                 )
-            _trigger_procurement(order, line, shortage)
+            proc = _trigger_procurement(order, line, shortage)
+            procurements.append(proc)
         line.save(update_fields=["quantity_reserved"])
 
     order.status = SalesOrder.STATUS_CONFIRMED
@@ -158,7 +160,7 @@ def confirm_sales_order(order: SalesOrder) -> SalesOrder:
         action="confirmed",
         details={"reference": order.reference, "customer": order.customer_name},
     )
-    return order
+    return order, procurements
 
 
 @transaction.atomic

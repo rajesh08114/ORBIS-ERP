@@ -14,7 +14,8 @@ import { ProfileDropdown } from "@/components/layout/profile-dropdown";
 import { PartnerCombobox } from "@/components/ui/partner-combobox";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, downloadCSV } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Menu,
   ReceiptText,
@@ -30,6 +31,7 @@ import {
   AlertTriangle,
   Bell,
 } from "@/components/icons";
+import { MasterMenu } from "@/components/layout/master-menu";
 import {
   KpiCard,
   ActionItem,
@@ -63,7 +65,7 @@ export default function DashboardPage() {
 
   const [formSales, setFormSales] = useState({ customer: "", product: "", quantity: 1, unitPrice: 0, notes: "" });
   const [formPurchase, setFormPurchase] = useState({ vendor: "", product: "", quantity: 1, unitCost: 0, notes: "" });
-  const [formProduct, setFormProduct] = useState({ name: "", sku: "", category: "Drone Components", salesPrice: 0, costPrice: 0, onHand: 10 });
+  const [formProduct, setFormProduct] = useState({ name: "", sku: "", category: "Furniture Assemblies", salesPrice: 0, costPrice: 0, onHand: 10 });
   const [formUser, setFormUser] = useState({ username: "", email: "", password: "", role: "Sales User", status: "Active" as "Active" | "Review" });
   const [submitting, setSubmitting] = useState(false);
 
@@ -147,7 +149,7 @@ export default function DashboardPage() {
       await apiClient("products/", { method: "POST", body: JSON.stringify({ name: formProduct.name, sku: formProduct.sku, category: formProduct.category, sales_price: formProduct.salesPrice, cost_price: formProduct.costPrice, on_hand_quantity: formProduct.onHand, reserved_quantity: 0 }) });
       toast.success("Product created successfully.");
       setActiveModal(null);
-      setFormProduct({ name: "", sku: "", category: "Drone Components", salesPrice: 0, costPrice: 0, onHand: 10 });
+      setFormProduct({ name: "", sku: "", category: "Furniture Assemblies", salesPrice: 0, costPrice: 0, onHand: 10 });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (err: any) { toast.error(err.message || "Failed to register product."); } finally { setSubmitting(false); }
@@ -256,58 +258,31 @@ export default function DashboardPage() {
   ].filter((a) => a.count > 0);
 
   return (
-    <div className="max-w-[1400px] mx-auto py-6 px-4 space-y-5">
+    <div className="min-h-screen bg-[var(--background)] -mt-5 -mx-4 lg:-mx-6 px-4 lg:px-6 pt-6 pb-28 transition-colors duration-200">
+      <div className="max-w-[1400px] mx-auto space-y-6">
 
-      {/* ── TOP NAVBAR BAR ─────────────────────────────────────────────────── */}
-      <div className="relative flex items-center justify-between rounded-full border border-[var(--border)] bg-[var(--surface)] py-1.5 px-3 shadow-sm">
-        <button
-          onClick={() => { if (typeof window !== "undefined" && window.innerWidth < 1024) { setSidebarOpen(true); } else { setMenuOpen(!menuOpen); } }}
-          className="p-1.5 rounded-full hover:bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--foreground)] transition flex items-center justify-center cursor-pointer focus:outline-none"
-          title="Master Menu"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
+        {/* ── TOP NAVBAR BAR ─────────────────────────────────────────────────── */}
+        <div className="relative flex items-center justify-between rounded-full border border-[var(--border)] bg-[var(--surface)] py-3 px-6 shadow-sm mb-8 transition-colors duration-200">
+          <MasterMenu />
 
-        <div className="flex items-center gap-2">
-          <div className="grid h-6 w-6 place-items-center rounded-full border-[3px] border-[var(--primary-strong)] bg-[var(--surface)]">
-            <div className="h-1.5 w-1.5 rotate-45 rounded-[2px] bg-[var(--primary-strong)]" />
-          </div>
-          <span className="font-extrabold text-xs tracking-wider text-[var(--foreground)] uppercase">ORBIS ERP</span>
-          <span className="text-[9px] font-semibold text-[var(--muted)] border border-[var(--border)] rounded px-1.5 py-px ml-1">Command Center</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[var(--muted)] hidden sm:block">
-            {user?.first_name} {user?.last_name}
-          </span>
-          <ProfileDropdown />
-        </div>
-
-        {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setMenuOpen(false)} />
-            <div className="absolute left-3 top-12 z-50 w-56 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="px-2 py-1 border-b border-[var(--border)] mb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">Navigate</span>
-              </div>
-              <nav className="space-y-0.5">
-                {[
-                  { href: "/sales/orders", icon: ReceiptText, label: "Sales Orders" },
-                  { href: "/purchase/orders", icon: ShoppingCart, label: "Purchase Orders" },
-                  { href: "/manufacturing/command-center", icon: Factory, label: "Manufacturing" },
-                  { href: "/products", icon: PackageSearch, label: "Products" },
-                  { href: "/audit-logs", icon: ShieldCheck, label: "Audit Logs" },
-                ].map(({ href, icon: Icon, label }) => (
-                  <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] transition">
-                    <Icon className="w-3.5 h-3.5 text-[var(--primary)]" />
-                    {label}
-                  </Link>
-                ))}
-              </nav>
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="grid h-6 w-6 place-items-center rounded-full border-[3px] border-[var(--primary)] bg-[var(--surface)] transition-colors duration-200">
+              <div className="h-1.5 w-1.5 rotate-45 rounded-[2px] bg-[var(--primary)] transition-colors duration-200" />
             </div>
-          </>
-        )}
-      </div>
+            <span className="font-extrabold text-xs tracking-wider text-[var(--foreground)] uppercase transition-colors duration-200">ORBIS ERP</span>
+            <span className="text-[9px] font-semibold text-[var(--muted)] border border-[var(--border)] rounded px-1.5 py-px ml-1 transition-colors duration-200">Command Center</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" className="h-7 text-[10px] px-2.5 hidden md:flex items-center gap-1" onClick={() => downloadCSV(activityEvents, "dashboard_activity_events.csv")}>
+              Export CSV
+            </Button>
+            <span className="text-[10px] text-[var(--muted)] hidden sm:block transition-colors duration-200">
+              {user?.first_name} {user?.last_name}
+            </span>
+            <ProfileDropdown />
+          </div>
+        </div>
 
       {/* ── ZONE 1: EXECUTIVE KPI STRIP ────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -395,7 +370,7 @@ export default function DashboardPage() {
         />
         <KpiCard
           label="Audit Events"
-          value="Live"
+          value={(data.audit_events?.total || 0).toString()}
           subtext="Security monitoring"
           icon={ShieldCheck}
           tone="neutral"
@@ -404,13 +379,99 @@ export default function DashboardPage() {
         />
         <KpiCard
           label="Team Members"
-          value="Active"
-          subtext="User management"
+          value={(data.users?.total || 0).toString()}
+          subtext={`${data.users?.active || 0} active users`}
           icon={Users}
           tone="primary"
           href="/users"
           statusDot="green"
         />
+      </div>
+
+      {/* ── ZONE 1.5: RECHARTS OVERVIEW ─────────────────────────────────── */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Sales + Purchase Orders Bar Chart */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+          <div className="mb-3">
+            <h3 className="text-sm font-bold text-[var(--foreground)]">Order Status Overview</h3>
+            <p className="text-[11px] text-[var(--muted)]">Sales & Purchase breakdown by status</p>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <RechartsBarChart
+              data={[
+                { name: "Draft", sales: data.sales?.all?.draft || 0, purchase: data.purchases?.all?.draft || 0 },
+                { name: "Confirmed", sales: data.sales?.all?.confirmed || 0, purchase: data.purchases?.all?.confirmed || 0 },
+                { name: "In Transit", sales: data.sales?.all?.partially_delivered || 0, purchase: data.purchases?.all?.partially_received || 0 },
+                { name: "Done", sales: data.sales?.all?.delivered || 0, purchase: data.purchases?.all?.received || 0 },
+                { name: "Late", sales: data.sales?.all?.late || 0, purchase: data.purchases?.all?.late || 0 },
+              ]}
+              margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+            >
+              <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} stroke="var(--muted)" />
+              <YAxis fontSize={10} tickLine={false} axisLine={false} stroke="var(--muted)" allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
+              <Bar dataKey="sales" name="Sales" fill="#6366f1" radius={[3, 3, 0, 0]} maxBarSize={22} />
+              <Bar dataKey="purchase" name="Purchase" fill="#10b981" radius={[3, 3, 0, 0]} maxBarSize={22} />
+            </RechartsBarChart>
+          </ResponsiveContainer>
+          <div className="flex items-center gap-4 mt-2 justify-center">
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--muted)]"><span className="h-2 w-2 rounded-sm bg-[#6366f1]" />Sales</span>
+            <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--muted)]"><span className="h-2 w-2 rounded-sm bg-[#10b981]" />Purchase</span>
+          </div>
+        </div>
+
+        {/* Manufacturing + Inventory Metrics Donut/Pie */}
+        <div className="rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+          <div className="mb-3">
+            <h3 className="text-sm font-bold text-[var(--foreground)]">Manufacturing Pipeline</h3>
+            <p className="text-[11px] text-[var(--muted)]">Work order stage distribution</p>
+          </div>
+          <div className="flex items-center gap-4 h-[200px]">
+            <div className="flex-1 h-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Draft", value: data.manufacturing?.all?.draft || 0 },
+                      { name: "Confirmed", value: data.manufacturing?.all?.confirmed || 0 },
+                      { name: "In Progress", value: data.manufacturing?.all?.in_progress || 0 },
+                      { name: "To Close", value: data.manufacturing?.all?.to_close || 0 },
+                      { name: "Done", value: data.manufacturing?.all?.done || 0 },
+                    ].filter(d => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {["#6366f1","#f59e0b","#3b82f6","#ef4444","#10b981"].map((color, i) => (
+                      <Cell key={i} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-col gap-2 text-xs">
+              {[
+                { label: "Draft", value: data.manufacturing?.all?.draft || 0, color: "#6366f1" },
+                { label: "Confirmed", value: data.manufacturing?.all?.confirmed || 0, color: "#f59e0b" },
+                { label: "In Progress", value: data.manufacturing?.all?.in_progress || 0, color: "#3b82f6" },
+                { label: "To Close", value: data.manufacturing?.all?.to_close || 0, color: "#ef4444" },
+                { label: "Done", value: data.manufacturing?.all?.done || 0, color: "#10b981" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-[var(--muted)] font-semibold">{label}</span>
+                  </div>
+                  <span className="font-mono font-bold text-[var(--foreground)]">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── MAIN CONTENT GRID ─────────────────────────────────────────────── */}
@@ -663,9 +724,9 @@ export default function DashboardPage() {
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Category</label>
                     <select value={formProduct.category} onChange={(e) => setFormProduct({ ...formProduct, category: e.target.value })} className="block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface-muted)] text-[var(--foreground)] focus:ring-1 focus:ring-[var(--primary)] focus:outline-none text-sm">
-                      <option>Drone Components</option>
-                      <option>Industrial Frames</option>
-                      <option>Control Systems</option>
+                      <option>Furniture Assemblies</option>
+                      <option>Wood Parts</option>
+                      <option>Hardware</option>
                       <option>Raw Materials</option>
                       <option>Packaging</option>
                     </select>
@@ -738,6 +799,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

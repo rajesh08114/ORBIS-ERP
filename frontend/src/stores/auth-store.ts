@@ -93,8 +93,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.access) {
             if (isAdminLogin && !response.user.is_staff && !response.user.is_superuser) {
-              console.error("User is not an administrator");
-              return null;
+              throw new Error("You do not have Administrator privileges.");
             }
             
             let role: UserRole = "System User";
@@ -126,8 +125,8 @@ export const useAuthStore = create<AuthState>()(
           }
           return null;
         } catch (error: any) {
-          console.error("Login failed:", error);
-          throw error;
+          // Returning null allows the component to show a toast, avoiding Unhandled Runtime Errors in Next.js
+          return null;
         }
       },
       register: async (payload: any) => {

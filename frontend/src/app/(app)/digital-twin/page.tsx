@@ -28,7 +28,7 @@ export default function DigitalTwinPage() {
         <Card className="p-4">
           <h3 className="text-lg font-bold">Active Bottlenecks</h3>
           <div className="mt-4 space-y-3">
-            {["Titanium alloy lead time drift", "QC Lab queue above threshold", "Warehouse B2 receiving hold"].map((item) => (
+            {["Oak wood supplier lead time drift", "Quality Control queue above threshold", "Warehouse B receiving hold"].map((item) => (
               <div key={item} className="rounded-[8px] border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-sm font-semibold">
                 {item}
               </div>
