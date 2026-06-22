@@ -164,13 +164,10 @@ export default function DashboardPage() {
     setSubmitting(true);
     try {
       const roleToGroupId: Record<string, number> = {
-        "Administrator": 7,
+        "Admin": 7,
         "Sales User": 2,
-        "Sales Manager": 8,
         "Purchase User": 3,
-        "Procurement Manager": 9,
         "Manufacturing User": 4,
-        "Manufacturing Manager": 10,
         "Inventory Manager": 5,
         "Business Owner": 6,
       };
@@ -771,13 +768,10 @@ export default function DashboardPage() {
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-1">Clearance Role</label>
                     <select value={formUser.role} onChange={(e) => setFormUser({ ...formUser, role: e.target.value })} className="block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface-muted)] text-[var(--foreground)] focus:ring-1 focus:ring-[var(--primary)] focus:outline-none text-sm">
-                      <option>Administrator</option>
+                      <option>Admin</option>
                       <option>Sales User</option>
-                      <option>Sales Manager</option>
                       <option>Purchase User</option>
-                      <option>Procurement Manager</option>
                       <option>Manufacturing User</option>
-                      <option>Manufacturing Manager</option>
                       <option>Inventory Manager</option>
                       <option>Business Owner</option>
                     </select>

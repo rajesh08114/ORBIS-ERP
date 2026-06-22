@@ -153,6 +153,24 @@ export default function ManufacturingOrderDetailPage({ params }: { params: Promi
               <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-1">Assignee</span>
               <span className="font-semibold">{order.assignee?.username || "Unassigned"}</span>
             </div>
+            {order.created_by_system && (
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-1">Source Document</span>
+                <span className="font-semibold">
+                  {order.source_sales_order ? (
+                    <Link href={`/sales/orders/${order.source_sales_order}`} className="text-[var(--primary)] hover:underline">Auto (SO-{order.source_sales_order})</Link>
+                  ) : (
+                    "System Generated"
+                  )}
+                </span>
+              </div>
+            )}
+            {order.created_by_system && order.trigger_reason && (
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider mb-1">Procurement Reason</span>
+                <span className="font-semibold text-[var(--warning)]">{order.trigger_reason}</span>
+              </div>
+            )}
           </div>
         </div>
       </Card>

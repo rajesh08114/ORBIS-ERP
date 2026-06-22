@@ -5,6 +5,7 @@ import { downloadCSV } from "@/lib/utils";
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { PageHeader } from "@/components/erp/page-header";
+import { InventoryTabs } from "@/components/erp/inventory-tabs";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/ui/states";
 import { useInventoryTransactions } from "@/hooks/use-erp";
@@ -65,6 +66,8 @@ export default function InventoryLedgerPage() {
         action="Export CSV"
         onAction={() => downloadCSV(filteredData, "inventory_ledger.csv")}
       />
+      
+      <InventoryTabs />
 
       {/* Filter Tabs */}
       <Card className="mb-4 p-3 flex flex-wrap gap-2 items-center bg-[var(--surface)]">

@@ -96,51 +96,57 @@ def confirm_sales_order(order: SalesOrder) -> tuple[SalesOrder, list]:
         if line.quantity_ordered <= 0:
             raise ValidationError("Ordered quantity must be greater than zero.")
 
-        product = line.product
+        from apps.products.models import Product
+        locked_product = Product.objects.select_for_update().get(pk=line.product_id)
+        product = locked_product
         required = _as_decimal(line.quantity_ordered - line.quantity_reserved)
-        available = _as_decimal(product.free_to_use_quantity)
+        available = _as_decimal(locked_product.free_to_use_quantity)
 
-        if available >= required:
-            reserve_stock(
-                product=product,
-                quantity=required,
-                reference=order.reference,
-                notes=f"Reserved for sales order {order.reference}",
-            )
-            line.quantity_reserved += required
-            log_field_change(
-                entity_type="SalesOrderLine",
-                entity_id=str(line.pk),
-                action="reserved",
-                field_name="quantity_reserved",
-                old_value=str(line.quantity_reserved - required),
-                new_value=str(line.quantity_reserved),
-            )
+        if product.procurement_strategy == Product.PROCUREMENT_MTO:
+            proc = _trigger_procurement(order, line, required)
+            procurements.append(proc)
         else:
-            shortage = required - available
-            if available > 0:
+            if available >= required:
                 reserve_stock(
                     product=product,
-                    quantity=available,
+                    quantity=required,
                     reference=order.reference,
-                    notes=f"Reserved available stock for sales order {order.reference}",
+                    notes=f"Reserved for sales order {order.reference}",
                 )
-                line.quantity_reserved += available
+                line.quantity_reserved += required
                 log_field_change(
                     entity_type="SalesOrderLine",
                     entity_id=str(line.pk),
                     action="reserved",
                     field_name="quantity_reserved",
-                    old_value=str(line.quantity_reserved - available),
+                    old_value=str(line.quantity_reserved - required),
                     new_value=str(line.quantity_reserved),
                 )
-            if not product.procure_on_demand:
-                raise ValidationError(
-                    f"Not enough free stock for {product.name}. "
-                    f"Required {required}, available {available}."
-                )
-            proc = _trigger_procurement(order, line, shortage)
-            procurements.append(proc)
+            else:
+                shortage = required - available
+                if available > 0:
+                    reserve_stock(
+                        product=product,
+                        quantity=available,
+                        reference=order.reference,
+                        notes=f"Reserved available stock for sales order {order.reference}",
+                    )
+                    line.quantity_reserved += available
+                    log_field_change(
+                        entity_type="SalesOrderLine",
+                        entity_id=str(line.pk),
+                        action="reserved",
+                        field_name="quantity_reserved",
+                        old_value=str(line.quantity_reserved - available),
+                        new_value=str(line.quantity_reserved),
+                    )
+                if not product.procure_on_demand:
+                    raise ValidationError(
+                        f"Not enough free stock for {product.name}. "
+                        f"Required {required}, available {available}."
+                    )
+                proc = _trigger_procurement(order, line, shortage)
+                procurements.append(proc)
         line.save(update_fields=["quantity_reserved"])
 
     order.status = SalesOrder.STATUS_CONFIRMED

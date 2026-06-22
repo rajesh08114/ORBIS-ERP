@@ -94,7 +94,11 @@ const mapOrder = (order: any, type: "sales" | "purchase"): Order => {
     due: order.created_at ? new Date(order.created_at).toLocaleDateString() : "",
     status: statusStr as Status,
     risk: "Low",
-    scheduled_date: order.scheduled_date
+    scheduled_date: order.scheduled_date,
+    source_sales_order: order.source_sales_order,
+    source_manufacturing_order: order.source_manufacturing_order,
+    trigger_reason: order.trigger_reason,
+    created_by_system: order.created_by_system
   };
 };
 
@@ -140,6 +144,9 @@ const mapManufacturingOrder = (order: any): Order => {
     quantity: parseFloat(order.quantity) || 0,
     unit: "Units", // Default unit
     componentStatus: order.status === "draft" ? "Draft" : "Available", // Simplified for now
+    source_sales_order: order.source_sales_order,
+    trigger_reason: order.trigger_reason,
+    created_by_system: order.created_by_system
   };
 };
 

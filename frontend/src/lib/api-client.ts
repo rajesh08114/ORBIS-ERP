@@ -84,9 +84,33 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
     } catch {
       // Not JSON
     }
+    
+    let errorMessage = response.statusText;
+    if (errorData) {
+      if (typeof errorData === "string") {
+        errorMessage = errorData;
+      } else if (Array.isArray(errorData) && errorData.length > 0 && typeof errorData[0] === "string") {
+        errorMessage = errorData[0];
+      } else if (errorData.detail) {
+        errorMessage = errorData.detail;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (typeof errorData === "object") {
+        const values = Object.values(errorData);
+        if (values.length > 0) {
+          const firstVal: any = values[0];
+          if (Array.isArray(firstVal) && firstVal.length > 0 && typeof firstVal[0] === "string") {
+            errorMessage = firstVal[0];
+          } else if (typeof firstVal === "string") {
+            errorMessage = firstVal;
+          }
+        }
+      }
+    }
+
     throw new ApiError(
       response.status,
-      errorData?.detail || errorData?.message || response.statusText,
+      errorMessage,
       errorData
     );
   }

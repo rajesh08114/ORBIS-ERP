@@ -5,39 +5,28 @@ import { persist } from "zustand/middleware";
 import { apiClient, setAuthToken, clearAuthToken } from "@/lib/api-client";
 
 export type UserRole =
-  | "Administrator"
-  | "System User"
-  | "Inventory Manager"
-  | "Procurement Manager"
-  | "Purchase User"
-  | "Manufacturing Manager"
-  | "Manufacturing User"
-  | "Sales Manager"
+  | "Admin"
   | "Sales User"
+  | "Purchase User"
+  | "Manufacturing User"
+  | "Inventory Manager"
   | "Business Owner";
 
 export const availableRoles: UserRole[] = [
-  "Administrator",
-  "Inventory Manager",
-  "Procurement Manager",
-  "Purchase User",
-  "Manufacturing Manager",
-  "Manufacturing User",
-  "Sales Manager",
+  "Admin",
   "Sales User",
+  "Purchase User",
+  "Manufacturing User",
+  "Inventory Manager",
   "Business Owner",
 ];
 
 const roleHomeMap: Record<string, string> = {
-  Administrator: "/dashboard",
-  "System User": "/dashboard",
-  "Inventory Manager": "/inventory",
-  "Procurement Manager": "/purchase/orders",
-  "Purchase User": "/purchase/orders",
-  "Manufacturing Manager": "/manufacturing/command-center",
-  "Manufacturing User": "/manufacturing/command-center",
-  "Sales Manager": "/sales/orders",
+  Admin: "/dashboard",
   "Sales User": "/sales/orders",
+  "Purchase User": "/purchase/orders",
+  "Manufacturing User": "/manufacturing/command-center",
+  "Inventory Manager": "/inventory",
   "Business Owner": "/dashboard",
 };
 
@@ -92,13 +81,13 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (response.success && response.access) {
-            if (isAdminLogin && !response.user.is_staff && !response.user.is_superuser) {
+            if (isAdminLogin && !response.user.is_superuser && !response.user.is_staff) {
               throw new Error("You do not have Administrator privileges.");
             }
             
-            let role: UserRole = "System User";
+            let role: UserRole = "Sales User";
             if (response.user.is_superuser || response.user.is_staff) {
-              role = "Administrator";
+              role = "Admin";
             } else if (response.user.groups && response.user.groups.length > 0) {
               const matchedRole = response.user.groups.find((g: string) => availableRoles.includes(g as UserRole));
               if (matchedRole) {
@@ -141,9 +130,9 @@ export const useAuthStore = create<AuthState>()(
             if (typeof window !== "undefined") {
               localStorage.setItem("refresh_token", response.refresh);
             }
-            let role: UserRole = "System User";
+            let role: UserRole = "Sales User";
             if (response.user.is_superuser || response.user.is_staff) {
-              role = "Administrator";
+              role = "Admin";
             } else if (response.user.groups && response.user.groups.length > 0) {
               const matchedRole = response.user.groups.find((g: string) => availableRoles.includes(g as UserRole));
               if (matchedRole) {
@@ -185,9 +174,9 @@ export const useAuthStore = create<AuthState>()(
           const response = await apiClient<{ success: boolean; user: LoginResponse["user"] }>("auth/me/");
           if (!response.success) return;
           const u = response.user;
-          let role: UserRole = "System User";
+          let role: UserRole = "Sales User";
           if (u.is_superuser || u.is_staff) {
-            role = "Administrator";
+            role = "Admin";
           } else if (u.groups && u.groups.length > 0) {
             const matchedRole = u.groups.find((g: string) => availableRoles.includes(g as UserRole));
             if (matchedRole) role = matchedRole as UserRole;

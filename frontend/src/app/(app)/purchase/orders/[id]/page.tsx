@@ -180,6 +180,20 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
               <span className="font-semibold text-[var(--foreground)]">Vendor Address</span>
               <span className="border-b border-[var(--muted)] pb-1 min-h-[24px]"></span>
             </div>
+            {order.created_by_system && (
+              <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+                <span className="font-semibold text-[var(--foreground)]">Source Document</span>
+                <span className="border-b border-[var(--muted)] pb-1 font-medium">
+                  {order.source_manufacturing_order ? (
+                    <Link href={`/manufacturing/orders/${order.source_manufacturing_order}`} className="text-[var(--primary)] hover:underline">Auto (MO-{order.source_manufacturing_order})</Link>
+                  ) : order.source_sales_order ? (
+                    <Link href={`/sales/orders/${order.source_sales_order}`} className="text-[var(--primary)] hover:underline">Auto (SO-{order.source_sales_order})</Link>
+                  ) : (
+                    "System Generated"
+                  )}
+                </span>
+              </div>
+            )}
           </div>
           <div className="space-y-6">
             <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
@@ -190,6 +204,12 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
               <span className="font-semibold text-[var(--foreground)]">Responsible Person</span>
               <span className="border-b border-[var(--muted)] pb-1 min-h-[24px] font-medium">System</span>
             </div>
+            {order.created_by_system && order.trigger_reason && (
+              <div className="grid grid-cols-[140px_1fr] items-end gap-4 text-sm">
+                <span className="font-semibold text-[var(--foreground)]">Procurement Reason</span>
+                <span className="border-b border-[var(--muted)] pb-1 font-medium text-[var(--warning)]">{order.trigger_reason}</span>
+              </div>
+            )}
           </div>
         </div>
 

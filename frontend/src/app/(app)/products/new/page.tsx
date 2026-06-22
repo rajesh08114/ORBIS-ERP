@@ -24,6 +24,7 @@ const productSchema = z.object({
   on_hand_quantity: z.coerce.number().min(0, "Quantity cannot be negative"),
   procure_on_demand: z.boolean(),
   procurement_type: z.enum(["purchase", "manufacture"]),
+  procurement_strategy: z.enum(["mts", "mto"]),
   vendor_id: z.string().optional(),
   bom_id: z.string().optional(),
 });
@@ -50,6 +51,7 @@ export default function NewProductPage() {
       on_hand_quantity: 0,
       procure_on_demand: false,
       procurement_type: "purchase",
+      procurement_strategy: "mts",
       vendor_id: "",
       bom_id: ""
     }
@@ -72,8 +74,7 @@ export default function NewProductPage() {
       let headers: Record<string, string> = {};
 
       const payloadData: any = { 
-        ...data, 
-        procurement_strategy: data.procure_on_demand ? "mto" : "mts" 
+        ...data 
       };
 
       if (data.procure_on_demand) {
@@ -212,13 +213,23 @@ export default function NewProductPage() {
           <div className="border-t border-[var(--border)] pt-6">
             <h3 className="text-sm font-bold text-[var(--foreground)] mb-4">Procurement Automation</h3>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-1">
+                  <span className="text-sm font-semibold text-[var(--foreground)]">Procurement Strategy</span>
+                  <Select {...register("procurement_strategy")}>
+                    <option value="mts">Make to Stock (MTS)</option>
+                    <option value="mto">Make to Order (MTO)</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
                 <input 
                   type="checkbox" 
                   {...register("procure_on_demand")} 
                   className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]" 
                 />
-                <label className="text-sm font-semibold text-[var(--foreground)]">Procure on Demand (Enable automatic replenishment)</label>
+                <label className="text-sm font-semibold text-[var(--foreground)]">Procure on Demand (Enable automatic replenishment if MTS is short, or always if MTO)</label>
               </div>
 
               {procureOnDemand && (

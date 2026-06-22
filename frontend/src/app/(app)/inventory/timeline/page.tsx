@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/erp/page-header";
+import { InventoryTabs } from "@/components/erp/inventory-tabs";
 import { LoadingState } from "@/components/ui/states";
 import { useInventoryTransactions } from "@/hooks/use-erp";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,8 @@ export default function InventoryTimelinePage() {
         description="A real-time visual feed of all material transfers, issues, and receiving tasks across Plant A facilities."
         action="Filter Locations"
       />
+      
+      <InventoryTabs />
 
       <div className="max-w-3xl mx-auto mt-6">
         <div className="relative border-l-2 border-[var(--border)] ml-4 pl-8 space-y-8 py-2">

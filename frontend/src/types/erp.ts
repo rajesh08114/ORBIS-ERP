@@ -52,6 +52,10 @@ export type Order = {
   quantity?: number;
   unit?: string;
   componentStatus?: string;
+  source_sales_order?: number | null;
+  source_manufacturing_order?: number | null;
+  trigger_reason?: string;
+  created_by_system?: boolean;
 };
 
 export type WorkOrder = {

@@ -5,6 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django.db import transaction
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.common.api import ERPActionPermission
 from apps.common.permissions import SALES_CONFIRM, SALES_CREATE, SALES_DELIVER, SALES_VIEW
@@ -36,6 +38,7 @@ class SalesOrderSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(read_only=True)
     lines = SalesOrderLineSerializer(many=True, read_only=True)
     write_lines = serializers.ListField(child=serializers.DictField(), write_only=True, required=False)
+    linked_procurements = serializers.SerializerMethodField()
 
     class Meta:
         model = SalesOrder
@@ -51,8 +54,20 @@ class SalesOrderSerializer(serializers.ModelSerializer):
             "delivered_at",
             "lines",
             "write_lines",
+            "linked_procurements",
         ]
-        read_only_fields = ["id", "status", "created_at", "confirmed_at", "delivered_at", "customer_name", "lines"]
+        read_only_fields = ["id", "status", "created_at", "confirmed_at", "delivered_at", "customer_name", "lines", "linked_procurements"]
+
+    def get_linked_procurements(self, obj):
+        from apps.purchases.models import PurchaseOrder
+        from apps.manufacturing.models import ManufacturingOrder
+        
+        procurements = []
+        for po in PurchaseOrder.objects.filter(source_sales_order=obj):
+            procurements.append({"type": "PurchaseOrder", "id": po.id, "reference": po.reference, "status": po.status})
+        for mo in ManufacturingOrder.objects.filter(source_sales_order=obj):
+            procurements.append({"type": "ManufacturingOrder", "id": mo.id, "reference": mo.reference, "status": mo.status})
+        return procurements
 
     @transaction.atomic
     def create(self, validated_data):
@@ -134,10 +149,13 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         order = self.get_object()
-        order, procurements = confirm_sales_order(order)
-        data = self.get_serializer(order).data
-        data["procurements"] = procurements
-        return Response(data)
+        try:
+            order, procurements = confirm_sales_order(order)
+            data = self.get_serializer(order).data
+            data["procurements"] = procurements
+            return Response(data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def deliver(self, request, pk=None):
@@ -150,14 +168,20 @@ class SalesOrderViewSet(viewsets.ModelViewSet):
                 if line_id is None:
                     continue
                 quantities_by_line[int(line_id)] = Decimal(str(item.get("quantity", 0)))
-        deliver_sales_order(order, quantities_by_line=quantities_by_line or None)
-        return Response(self.get_serializer(order).data)
+        try:
+            deliver_sales_order(order, quantities_by_line=quantities_by_line or None)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         order = self.get_object()
-        cancel_sales_order(order)
-        return Response(self.get_serializer(order).data, status=status.HTTP_200_OK)
+        try:
+            cancel_sales_order(order)
+            return Response(self.get_serializer(order).data, status=status.HTTP_200_OK)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
 
 class SalesOrderLineViewSet(viewsets.ModelViewSet):

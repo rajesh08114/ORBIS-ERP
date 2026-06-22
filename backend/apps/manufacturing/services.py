@@ -27,6 +27,7 @@ def create_manufacturing_order(
     quantity,
     notes: str = "",
     source_sales_order=None,
+    source_manufacturing_order=None,
     trigger_reason: str = "",
     created_by_system: bool = False,
 ) -> ManufacturingOrder:
@@ -42,6 +43,7 @@ def create_manufacturing_order(
         quantity=quantity,
         notes=notes,
         source_sales_order=source_sales_order,
+        source_manufacturing_order=source_manufacturing_order,
         trigger_reason=trigger_reason,
         created_by_system=created_by_system,
     )
@@ -86,6 +88,68 @@ def _generate_work_orders(order: ManufacturingOrder) -> None:
         WorkOrder.objects.bulk_create(work_orders)
 
 
+def _auto_reference(prefix: str, order: ManufacturingOrder, line_id: int) -> str:
+    return f"{prefix}-{order.reference}-{line_id}"
+
+
+def _trigger_component_procurement(order: ManufacturingOrder, line: ManufacturingOrderLine, shortage: Decimal) -> dict:
+    from apps.products.models import Product
+    product = line.component
+    trigger_reason = f"Component shortage for {order.reference}"
+    log_audit_event(
+        entity_name="ManufacturingOrder",
+        entity_id=str(order.pk),
+        action="procurement_triggered",
+        details={
+            "reference": order.reference,
+            "product_id": product.pk,
+            "shortage": str(shortage),
+            "procurement_type": product.procurement_type,
+        },
+    )
+
+    if product.procurement_type == Product.PROCUREMENT_PURCHASE:
+        from apps.purchases.models import PurchaseOrder, PurchaseOrderLine
+        from apps.purchases.services import confirm_purchase_order
+
+        if not product.vendor:
+            raise ValidationError(f"Product {product.name} requires a vendor to trigger purchase procurement.")
+
+        purchase_order = PurchaseOrder.objects.create(
+            reference=_auto_reference("AUTO-PO", order, line.pk),
+            vendor=product.vendor,
+            source_manufacturing_order=order,
+            trigger_reason=trigger_reason,
+            created_by_system=True,
+        )
+        PurchaseOrderLine.objects.create(
+            order=purchase_order,
+            product=product,
+            quantity_ordered=shortage,
+            unit_cost=product.cost_price,
+        )
+        confirm_purchase_order(purchase_order)
+        return {"type": "PurchaseOrder", "reference": purchase_order.reference, "product": product.name, "quantity": str(shortage)}
+
+    if product.procurement_type == Product.PROCUREMENT_MANUFACTURE:
+        bom = product.default_bom or active_bom_for_product(product)
+        if not bom:
+            raise ValidationError(f"No active BoM found for manufactured product {product.name}.")
+        manufacturing_order = create_manufacturing_order(
+            reference=_auto_reference("AUTO-MO", order, line.pk),
+            bom=bom,
+            quantity=shortage,
+            notes=trigger_reason,
+            source_manufacturing_order=order,
+            trigger_reason=trigger_reason,
+            created_by_system=True,
+        )
+        confirm_manufacturing_order(manufacturing_order)
+        return {"type": "ManufacturingOrder", "reference": manufacturing_order.reference, "product": product.name, "quantity": str(shortage)}
+
+    raise ValidationError(f"Unsupported procurement type for {product.name}.")
+
+
 @transaction.atomic
 def confirm_manufacturing_order(order: ManufacturingOrder) -> ManufacturingOrder:
     order = ManufacturingOrder.objects.select_for_update().prefetch_related("component_lines__component").get(pk=order.pk)
@@ -93,21 +157,47 @@ def confirm_manufacturing_order(order: ManufacturingOrder) -> ManufacturingOrder
     if order.status != ManufacturingOrder.STATUS_DRAFT:
         raise ValidationError("Only draft manufacturing orders can be confirmed.")
 
+    procurements = []
     for line in order.component_lines.select_related("component"):
         if line.quantity_required <= 0:
             raise ValidationError("Component requirement must be greater than zero.")
-        if line.component.free_to_use_quantity < line.quantity_required:
-            raise ValidationError(
-                f"Not enough stock for component {line.component.name}. "
-                f"Required {line.quantity_required}, available {line.component.free_to_use_quantity}."
-            )
-        reserve_stock(
-            product=line.component,
-            quantity=line.quantity_required,
-            reference=order.reference,
-            notes=f"Reserved for manufacturing order {order.reference}",
-        )
-        line.quantity_reserved = line.quantity_required
+
+        from apps.products.models import Product
+        locked_product = Product.objects.select_for_update().get(pk=line.component_id)
+        product = locked_product
+        required = _as_decimal(line.quantity_required - line.quantity_reserved)
+        available = _as_decimal(locked_product.free_to_use_quantity)
+
+        from apps.products.models import Product
+        if product.procurement_strategy == Product.PROCUREMENT_MTO:
+            proc = _trigger_component_procurement(order, line, required)
+            procurements.append(proc)
+        else:
+            if available >= required:
+                reserve_stock(
+                    product=product,
+                    quantity=required,
+                    reference=order.reference,
+                    notes=f"Reserved for manufacturing order {order.reference}",
+                )
+                line.quantity_reserved += required
+            else:
+                shortage = required - available
+                if available > 0:
+                    reserve_stock(
+                        product=product,
+                        quantity=available,
+                        reference=order.reference,
+                        notes=f"Reserved available stock for manufacturing order {order.reference}",
+                    )
+                    line.quantity_reserved += available
+                if not product.procure_on_demand:
+                    raise ValidationError(
+                        f"Not enough stock for component {product.name}. "
+                        f"Required {required}, available {available}."
+                    )
+                proc = _trigger_component_procurement(order, line, shortage)
+                procurements.append(proc)
         line.save(update_fields=["quantity_reserved"])
 
     order.status = ManufacturingOrder.STATUS_CONFIRMED

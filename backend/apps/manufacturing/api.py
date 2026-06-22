@@ -3,6 +3,8 @@ from decimal import Decimal
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.audit.services import audit_update
 from apps.common.api import ERPActionPermission
@@ -161,20 +163,29 @@ class ManufacturingOrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         order = self.get_object()
-        confirm_manufacturing_order(order)
-        return Response(self.get_serializer(order).data)
+        try:
+            confirm_manufacturing_order(order)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def start(self, request, pk=None):
         order = self.get_object()
-        start_manufacturing_order(order)
-        return Response(self.get_serializer(order).data)
+        try:
+            start_manufacturing_order(order)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         order = self.get_object()
-        complete_manufacturing_order(order)
-        return Response(self.get_serializer(order).data)
+        try:
+            complete_manufacturing_order(order)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
 
 class BillOfMaterialViewSet(viewsets.ModelViewSet):

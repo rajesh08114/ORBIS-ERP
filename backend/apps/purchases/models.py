@@ -42,6 +42,13 @@ class PurchaseOrder(models.Model):
         on_delete=models.SET_NULL,
         related_name="generated_purchase_orders",
     )
+    source_manufacturing_order = models.ForeignKey(
+        "manufacturing.ManufacturingOrder",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="generated_purchase_orders",
+    )
     trigger_reason = models.CharField(max_length=255, blank=True)
     created_by_system = models.BooleanField(default=False)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_DRAFT)

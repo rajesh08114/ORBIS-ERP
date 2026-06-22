@@ -5,6 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from django.db import transaction
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from apps.common.api import ERPActionPermission
 from apps.common.permissions import PURCHASE_CREATE, PURCHASE_RECEIVE, PURCHASE_VIEW
@@ -44,6 +46,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "vendor",
             "vendor_name",
             "source_sales_order",
+            "source_manufacturing_order",
             "trigger_reason",
             "created_by_system",
             "status",
@@ -135,8 +138,11 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         order = self.get_object()
-        confirm_purchase_order(order)
-        return Response(self.get_serializer(order).data)
+        try:
+            confirm_purchase_order(order)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def receive(self, request, pk=None):
@@ -149,14 +155,20 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
                 if line_id is None:
                     continue
                 quantities_by_line[int(line_id)] = Decimal(str(item.get("quantity", 0)))
-        receive_purchase_order(order, quantities_by_line=quantities_by_line or None)
-        return Response(self.get_serializer(order).data)
+        try:
+            receive_purchase_order(order, quantities_by_line=quantities_by_line or None)
+            return Response(self.get_serializer(order).data)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         order = self.get_object()
-        cancel_purchase_order(order)
-        return Response(self.get_serializer(order).data, status=status.HTTP_200_OK)
+        try:
+            cancel_purchase_order(order)
+            return Response(self.get_serializer(order).data, status=status.HTTP_200_OK)
+        except (DjangoValidationError, ValueError) as e:
+            raise DRFValidationError(detail=str(e))
 
 
 class PurchaseOrderLineViewSet(viewsets.ModelViewSet):

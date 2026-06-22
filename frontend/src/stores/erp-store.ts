@@ -117,17 +117,17 @@ const defaultBOMs: BillOfMaterial[] = [
 
 // Initial Users
 const defaultUsers: ErpUser[] = [
-  { id: "USR-0001", username: "sarah.jenkins", email: "sarah.j@orbis.example", role: "Administrator", status: "Active" },
+  { id: "USR-0001", username: "sarah.jenkins", email: "sarah.j@orbis.example", role: "Admin", status: "Active" },
   { id: "USR-0002", username: "markus.zhao", email: "markus.z@orbis.example", role: "Inventory Manager", status: "Active" },
-  { id: "USR-0003", username: "elena.rodriguez", email: "elena.r@orbis.example", role: "Procurement Manager", status: "Active" },
-  { id: "USR-0004", username: "alex.kline", email: "alex.k@orbis.example", role: "Manufacturing Manager", status: "Active" },
-  { id: "USR-0005", username: "julia.vance", email: "julia.v@orbis.example", role: "Sales Manager", status: "Active" }
+  { id: "USR-0003", username: "elena.rodriguez", email: "elena.r@orbis.example", role: "Purchase User", status: "Active" },
+  { id: "USR-0004", username: "alex.kline", email: "alex.k@orbis.example", role: "Manufacturing User", status: "Active" },
+  { id: "USR-0005", username: "julia.vance", email: "julia.v@orbis.example", role: "Sales User", status: "Active" }
 ];
 
 // Initial Role Permissions Matrix
 const defaultPermissions: RolePermission[] = [
   {
-    role: "Administrator",
+    role: "Admin",
     permissions: { Sales: "write", Procurement: "write", Manufacturing: "write", Governance: "write", Admin: "write" }
   },
   {
@@ -135,15 +135,15 @@ const defaultPermissions: RolePermission[] = [
     permissions: { Sales: "read", Procurement: "read", Manufacturing: "read", Governance: "read", Admin: "none" }
   },
   {
-    role: "Procurement Manager",
+    role: "Purchase User",
     permissions: { Sales: "none", Procurement: "write", Manufacturing: "read", Governance: "read", Admin: "none" }
   },
   {
-    role: "Manufacturing Manager",
+    role: "Manufacturing User",
     permissions: { Sales: "none", Procurement: "read", Manufacturing: "write", Governance: "read", Admin: "none" }
   },
   {
-    role: "Sales Manager",
+    role: "Sales User",
     permissions: { Sales: "write", Procurement: "none", Manufacturing: "none", Governance: "read", Admin: "none" }
   }
 ];

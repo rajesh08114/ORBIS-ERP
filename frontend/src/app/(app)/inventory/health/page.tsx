@@ -1,6 +1,7 @@
 "use client";
 
 import { PageHeader } from "@/components/erp/page-header";
+import { InventoryTabs } from "@/components/erp/inventory-tabs";
 import { LoadingState } from "@/components/ui/states";
 import { useProducts } from "@/hooks/use-erp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,8 @@ export default function InventoryHealthPage() {
         action="Run Simulation"
         onAction={() => toast.info("Inventory simulation initiated... calculating predictions.")}
       />
+
+      <InventoryTabs />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Total Valuation" value={`$${(totalValuation / 1000000).toFixed(2)}M`} trend="Asset value" icon={Boxes} tone="success" />

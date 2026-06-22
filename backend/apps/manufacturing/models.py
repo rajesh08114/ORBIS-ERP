@@ -57,6 +57,32 @@ class BillOfMaterialLine(models.Model):
             models.CheckConstraint(check=models.Q(quantity_required__gt=0), name="bom_line_qty_required_gt_0"),
         ]
 
+    def clean(self):
+        super().clean()
+        if hasattr(self, 'bom') and hasattr(self, 'component') and self.bom and self.component:
+            self._check_circular_bom(self.bom.finished_product, self.component)
+
+    def _check_circular_bom(self, target_product, current_product, visited=None):
+        if visited is None:
+            visited = set()
+            
+        if current_product.pk == target_product.pk:
+            from django.core.exceptions import ValidationError
+            raise ValidationError(f"Circular BoM detected: {target_product.name} depends on itself via {current_product.name}.")
+            
+        if current_product.pk in visited:
+            return
+            
+        visited.add(current_product.pk)
+        
+        for bom in current_product.boms.filter(is_active=True):
+            for line in bom.lines.all():
+                self._check_circular_bom(target_product, line.component, visited.copy())
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class ManufacturingOrder(models.Model):
     STATUS_DRAFT = "draft"
@@ -100,6 +126,13 @@ class ManufacturingOrder(models.Model):
     )
     source_sales_order = models.ForeignKey(
         "sales.SalesOrder",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="generated_manufacturing_orders",
+    )
+    source_manufacturing_order = models.ForeignKey(
+        "self",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

@@ -186,6 +186,34 @@ export default function SalesOrderDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
+        {/* Linked Procurements */}
+        {order.linked_procurements && order.linked_procurements.length > 0 && (
+          <div className="px-8 py-4 bg-blue-50/50 border-b border-[var(--border)]">
+            <h4 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+              Auto-Triggered Procurements
+            </h4>
+            <div className="flex flex-col gap-2">
+              {order.linked_procurements.map((proc: any, i: number) => (
+                <div key={i} className="flex items-center gap-4 text-sm bg-white border border-blue-100 rounded p-2">
+                  <span className="font-medium text-blue-800">
+                    {proc.type === "PurchaseOrder" ? "Purchase Order" : "Manufacturing Order"}
+                  </span>
+                  <Link 
+                    href={proc.type === "PurchaseOrder" ? `/purchase/orders/${proc.id}` : `/manufacturing/orders/${proc.id}`}
+                    className="font-bold text-[var(--primary)] hover:underline"
+                  >
+                    {proc.reference}
+                  </Link>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wider">
+                    {proc.status.replace("_", " ")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

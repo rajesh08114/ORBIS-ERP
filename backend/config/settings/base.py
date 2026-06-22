@@ -1,7 +1,9 @@
 from datetime import timedelta
+import os
 from pathlib import Path
 
 import environ
+# Force reload for .env
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -54,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.common.middleware.RequestContextMiddleware",
+    "apps.common.middleware.IdempotencyMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

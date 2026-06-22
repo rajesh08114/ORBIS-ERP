@@ -26,6 +26,19 @@ export function OrderTable({ orders, type }: { orders: Order[]; type: "sales" | 
           }
         },
         { accessorKey: "due", header: "Date" },
+        { 
+          accessorKey: "source", 
+          header: "Source", 
+          cell: ({ row }) => {
+            if (row.original.created_by_system) {
+              if (row.original.source_sales_order) {
+                return <Badge tone="info">Auto (SO-{row.original.source_sales_order})</Badge>;
+              }
+              return <Badge tone="info">Auto Procurement</Badge>;
+            }
+            return <span className="text-[var(--muted)]">Manual</span>;
+          }
+        },
         { accessorKey: "finishedProduct", header: "Finished Product", cell: ({ row }) => <span className="font-semibold">{row.original.finishedProduct}</span> },
         { accessorKey: "componentStatus", header: "Component Status", cell: ({ row }) => <Badge tone={row.original.componentStatus === "Available" ? "success" : "neutral"}>{row.original.componentStatus}</Badge> },
         { accessorKey: "quantity", header: "Quantity", cell: ({ row }) => <span className="font-mono">{row.original.quantity?.toFixed(2)}</span> },
@@ -50,6 +63,22 @@ export function OrderTable({ orders, type }: { orders: Order[]; type: "sales" | 
         }
       },
       { accessorKey: "party", header: "Partner" }, // Customer / Vendor
+      { 
+        accessorKey: "source", 
+        header: "Source", 
+        cell: ({ row }) => {
+          if (row.original.created_by_system) {
+            if (row.original.source_manufacturing_order) {
+              return <Badge tone="info">Auto (MO-{row.original.source_manufacturing_order})</Badge>;
+            }
+            if (row.original.source_sales_order) {
+              return <Badge tone="info">Auto (SO-{row.original.source_sales_order})</Badge>;
+            }
+            return <Badge tone="info">Auto Procurement</Badge>;
+          }
+          return <span className="text-[var(--muted)]">Manual</span>;
+        }
+      },
       { accessorKey: "value", header: "Total", cell: ({ row }) => formatCurrency(row.original.value) },
       { accessorKey: "status", header: "Status", cell: ({ row }) => <Badge tone={statusTone(row.original.status)}>{row.original.status}</Badge> },
       { accessorKey: "risk", header: "Risk", cell: ({ row }) => <Badge tone={row.original.risk === "High" ? "danger" : row.original.risk === "Medium" ? "warning" : "success"}>{row.original.risk}</Badge> }

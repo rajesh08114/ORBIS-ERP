@@ -23,6 +23,7 @@ const schema = z.object({
   onHand: z.coerce.number().min(0, "Quantity cannot be negative"),
   procureOnDemand: z.boolean(),
   procurementType: z.enum(["purchase", "manufacture"]),
+  procurement_strategy: z.enum(["mts", "mto"]),
   vendor_id: z.string().optional(),
   bom_id: z.string().optional(),
 });
@@ -50,6 +51,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       onHand: 0,
       procureOnDemand: false,
       procurementType: "purchase",
+      procurement_strategy: "mts",
       vendor_id: "",
       bom_id: ""
     }
@@ -68,6 +70,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         onHand: parseFloat(product.on_hand_quantity) || 0,
         procureOnDemand: product.procure_on_demand || false,
         procurementType: product.procurement_type || "purchase",
+        procurement_strategy: product.procurement_strategy || "mts",
         vendor_id: product.vendor?.toString() || "",
         bom_id: product.default_bom?.toString() || ""
       });
@@ -84,7 +87,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         on_hand_quantity: data.onHand,
         procure_on_demand: data.procureOnDemand,
         procurement_type: data.procurementType,
-        procurement_strategy: data.procureOnDemand ? "mto" : "mts",
+        procurement_strategy: data.procurement_strategy,
       };
 
       if (data.procureOnDemand) {
@@ -115,7 +118,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         formData.append("on_hand_quantity", String(data.onHand));
         formData.append("procure_on_demand", String(data.procureOnDemand ? "True" : "False"));
         formData.append("procurement_type", data.procurementType);
-        formData.append("procurement_strategy", data.procureOnDemand ? "mto" : "mts");
+        formData.append("procurement_strategy", data.procurement_strategy);
         
         if (data.procureOnDemand) {
           if (data.procurementType === "purchase" && data.vendor_id) formData.append("vendor", data.vendor_id);
@@ -229,8 +232,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             
             <div className="pt-4 mt-4">
               <div className="flex items-center gap-4 mb-4">
-                <label className="text-sm font-semibold text-[var(--foreground)]">Procure on Demand</label>
-                <input type="checkbox" {...register("procureOnDemand")} className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                <label className="text-sm font-semibold text-[var(--foreground)] w-1/3">Procurement Strategy</label>
+                <div className="w-2/3">
+                  <Select {...register("procurement_strategy")} className="w-full border-b-2 border-t-0 border-l-0 border-r-0 rounded-none bg-transparent px-0 shadow-none focus-visible:ring-0">
+                    <option value="mts">Make to Stock (MTS)</option>
+                    <option value="mto">Make to Order (MTO)</option>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 mb-4">
+                <label className="text-sm font-semibold text-[var(--foreground)] w-1/3">Procure on Demand</label>
+                <div className="w-2/3">
+                  <input type="checkbox" {...register("procureOnDemand")} className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                  <span className="text-xs text-[var(--muted)] ml-2">(Auto-replenish if MTS is short, or always if MTO)</span>
+                </div>
               </div>
 
               {procureOnDemand && (
